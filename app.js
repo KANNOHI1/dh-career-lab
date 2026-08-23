@@ -279,7 +279,10 @@ function result() {
       h += '<p style="margin:.6rem 0 .2rem"><strong>いま条件が合っているもの</strong></p>' +
         '<ul class="plain">' + top.map(t => '<li>' + t.name + '</li>').join('') + '</ul>';
     }
-    if (nope.length) {
+    // 教える側に興味がないと答えた人に、教員を「すすめない」と伝えても情報にならない。
+    // カード自体は下に残すので、まとめからだけ外す。
+    const careAboutTeaching = A.teachInterest !== 'ない' || A.future === '教える側になる';
+    if (nope.length && careAboutTeaching) {
       h += '<p style="margin:.6rem 0 .2rem"><strong>調べた結果、すすめないもの</strong></p>' +
         '<ul class="plain">' + nope.map(t => '<li>' + t.name + '</li>').join('') + '</ul>';
     }

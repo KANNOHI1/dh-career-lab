@@ -613,7 +613,14 @@ function dumpText() {
 (function () {
   const srcs = new Set();
   CERTIFICATIONS.forEach(c => { if (c.source) srcs.add(c.source); });
-  TRACKS.forEach(t => { if (t.source) srcs.add(t.source); });
+  TRACKS.forEach(t => {
+    // 求人の実例・経歴・市場データの出典も数える。画面に出しているものは全部数える。
+    [t.source].concat(
+      (t.income ? t.income.examples.map(e => e.source) : []),
+      (t.examples ? t.examples.map(e => e.source) : []),
+      (t.marketShrink ? [t.marketShrink.source, t.marketShrink.capacitySource] : [])
+    ).forEach(u => { if (u) srcs.add(u); });
+  });
   [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });
   $('#srccount').textContent = srcs.size;

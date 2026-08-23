@@ -39,7 +39,9 @@ const STEPS = [
         hint:'「かじった」のか「主戦場だった」のかを分けたいだけです。おおよそで構いません。' },
       { id:'certs', t:'持っている認定・専門資格は？', type:'checkbox',
         hint:'当てはまるものすべて。なければ空欄で',
-        opts:['麻酔系の認定（認定麻酔衛生士など）','歯周病の認定','インプラントの認定','矯正の認定','ホワイトニングコーディネーター','その他'] },
+        // 一般的なものから並べる。保有者数（歯周病1,356 / ホワイトニング1,452 /
+        // インプラント1,167 / 麻酔214 / 矯正140）とも概ね一致する。台帳: research/sources.md 第3章
+        opts:['歯周病の認定','ホワイトニングコーディネーター','インプラントの認定','矯正の認定','麻酔系の認定（認定麻酔衛生士など）','その他'] },
       { id:'certOther', t:'その他の資格があれば', type:'text',
         showIf:() => (A.certs || []).includes('その他') },
       { id:'certUse', t:'その資格、実務で使っていますか？', type:'radio',
@@ -101,6 +103,8 @@ let cur = 0;
 
 function render(keepScroll) {
   const y = keepScroll ? window.scrollY : 0;
+  // 前置きは最初の画面でだけ意味がある。2ステップ目以降は設問に場所を渡す
+  $('#preamble').style.display = cur === 0 ? '' : 'none';
   const prog = $('#progress');
   prog.innerHTML = STEPS.map((_, i) =>
     '<span class="' + (i <= cur ? 'done' : '') + '"></span>').join('') +

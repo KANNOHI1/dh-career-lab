@@ -37,6 +37,13 @@ h2 { font-size: 1.1rem; margin: 0 0 .3rem; }
 h3 { font-size: .95rem; margin: 2rem 0 .6rem; color: var(--muted); font-weight: 600; }
 .sub { color: var(--muted); font-size: .85rem; margin: 0 0 1.5rem; }
 
+.intro {
+  border-left: 3px solid var(--accent); padding: .1rem 0 .1rem .9rem;
+  margin: 0 0 1.2rem; font-size: .9rem;
+}
+.intro p { margin: .5rem 0; }
+.intro .mini { font-size: .8rem; color: var(--muted); }
+
 .privacy {
   border: 1px solid var(--line); border-radius: .5rem;
   padding: .8rem 1rem; margin: 0 0 1.5rem;
@@ -135,7 +142,6 @@ details.card[open] > summary { border-bottom: 1px solid var(--line); padding-bot
 }
 ul.plain { padding-left: 1.2rem; margin: .4rem 0; }
 ul.plain li { margin: .3rem 0; }
-.copy { width: 100%; min-height: 12rem; font-size: .8rem; font-family: ui-monospace, monospace; }
 footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top: 1px solid var(--line); padding: 1rem 0 0; }
 </style>
 </head>
@@ -144,9 +150,20 @@ footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top:
   <h1>歯科衛生士キャリアラボ</h1>
   <p class="sub">これまでの経験を、事実として並べ直すための質問です。</p>
 
+  <div class="intro">
+    <p>厚生労働省の統計と、実際に出ている求人を集めて作りました。
+    質問に答えると、次の3つが出ます。</p>
+    <ul class="plain">
+      <li>いま持っているものが、全国 <span id="introN">—</span> 人の歯科衛生士の中でどこに位置するか</li>
+      <li>この先に進める道が何本あって、それぞれ何が必要で、収入がどう変わるか</li>
+      <li>そのうち、今日できること</li>
+    </ul>
+    <p class="mini">5ステップ・3分ほど。数字にはすべて出典をつけています。</p>
+  </div>
+
   <div class="privacy">
     <strong>回答は自動送信されません。公開も検索もされません。</strong><br>
-    答えたくない項目は空欄のまま進めます。途中でやめても大丈夫です。
+    答えたくない項目は空欄のまま進めます。選んだあと、もう一度押せば取り消せます。
   </div>
 
   <div class="progress" id="progress"></div>
@@ -159,10 +176,10 @@ footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top:
 
 <!-- キャッシュ対策: スマホのブラウザが古い JS を保持するため、
      data/*.js か app.js を変更したら下の ?v= を必ず更新する -->
-<script src="data/market.js?v=20260823j"></script>
-<script src="data/certifications.js?v=20260823j"></script>
-<script src="data/salary.js?v=20260823j"></script>
-<script src="data/tracks.js?v=20260823j"></script>
-<script src="app.js?v=20260823j"></script>
+<script src="data/market.js?v=20260824a"></script>
+<script src="data/certifications.js?v=20260824a"></script>
+<script src="data/salary.js?v=20260824a"></script>
+<script src="data/tracks.js?v=20260824a"></script>
+<script src="app.js?v=20260824a"></script>
 </body>
 </html>

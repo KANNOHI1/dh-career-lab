@@ -6,7 +6,9 @@ const $ = (s, r) => (r || document).querySelector(s);
 
 const REGIONS = ['北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県','茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県','新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県','静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県','徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'];
 const FIELDS = ['一般','矯正','インプラント','口腔外科','小児','歯周治療','予防・メインテナンス','訪問','審美'];
-const YN = ['はい','いいえ','覚えていない'];
+
+// この設問が変わると同じステップ内の表示が変わる（条件付き表示・上限3件の付け外し）
+const REDRAW_ON = ['certs', 'taught', 'fields', 'priority'];
 
 const hasAnes = () => (A.certs || []).some(c => c.indexOf('麻酔') >= 0);
 
@@ -18,7 +20,7 @@ const STEPS = [
         opts:['一般歯科','矯正歯科','口腔外科・病院','訪問診療','企業','教育機関','行政・公衆衛生','離職中'] },
       { id:'employment', t:'雇用形態は？', type:'radio',
         opts:['常勤','パート・非常勤','フリーランス','離職中'] },
-      { id:'daysPerWeek', t:'週に何日働いていますか？', type:'number', unit:'日', range:[1, 7] },
+      { id:'daysPerWeek', t:'週に何日働いていますか？', type:'number', unit:'日', range:[1, 6] },
       { id:'income', t:'今の年収は？', type:'radio',
         hint:'ざっくりで大丈夫です。答えたくなければ選ばなくて構いません。',
         opts:['〜250万','250〜350万','350〜450万','450〜550万','550万〜','答えたくない'] },
@@ -28,9 +30,9 @@ const STEPS = [
   {
     title: '経験の内訳', note: 'ここが一番大事なところです。1分ほど。',
     qs: [
-      { id:'years', t:'歯科衛生士として働いた年数は？', type:'number', unit:'年', range:[0, 25],
+      { id:'years', t:'歯科衛生士として働いた年数は？', type:'number', unit:'年', range:[0, 20],
         hint:'ブランクを除いた実働の年数' },
-      { id:'breakYears', t:'ブランクはありましたか？ 何年くらい？', type:'number', unit:'年', range:[0, 15],
+      { id:'breakYears', t:'ブランクはありましたか？ 何年くらい？', type:'number', unit:'年', range:[0, 8],
         hint:'なければ 0' },
       { id:'fields', t:'通った診療領域は？', type:'checkbox', opts:FIELDS, hint:'当てはまるものすべて' },
       { id:'fieldYears', t:'それぞれ何年くらいですか？', type:'fieldYears',
@@ -42,24 +44,17 @@ const STEPS = [
         showIf:() => (A.certs || []).includes('その他') },
       { id:'certUse', t:'その資格、実務で使っていますか？', type:'radio',
         opts:['よく使う','たまに使う','ほぼ使わない'], showIf:() => (A.certs || []).length > 0 },
+      // 「認定麻酔衛生士」と呼ばれる資格は制度が2つあり、保有者数が桁違いに違う。
+      // 発行元さえ分かれば判別できるので、取得プロセスは聞かない。
+      { id:'anesIssuer', t:'その麻酔の認定は、どこが発行したものですか？', type:'radio',
+        hint:'認定証に書かれている団体名です。分からなければ「わからない」で構いません。',
+        opts:['日本歯科麻酔学会','日本歯科医学振興機構（JDA）','わからない'], showIf:hasAnes },
       { id:'handedness', t:'利き手は？', type:'radio', opts:['右','左','両方'] },
     ],
   },
   {
-    title: '確認したいこと', note: '同じ名前の資格が複数あるため、取り方をうかがいます。',
+    title: 'これまでにあったこと', note: '自己評価ではなく、実際にあったかどうかだけ答えてください。40秒ほど。',
     qs: [
-      { id:'anesHead', type:'head', t:'麻酔の認定について',
-        hint:'「認定麻酔衛生士」と呼ばれる資格は制度が2つあり、取り方が違います。覚えている範囲で構いません。',
-        showIf:hasAnes },
-      { id:'anesCases', t:'取るとき、症例の報告書を提出しましたか？', hint:'数十件単位のもの',
-        type:'radio', opts:YN, showIf:hasAnes },
-      { id:'anesOral', t:'口頭試問（面接形式の試験）はありましたか？', type:'radio', opts:YN, showIf:hasAnes },
-      { id:'anesBls', t:'BLS（一次救命処置）のコース修了は必要でしたか？', type:'radio', opts:YN, showIf:hasAnes },
-      { id:'anesOneDay', t:'講習は1日で終わりましたか？', type:'radio', opts:YN, showIf:hasAnes },
-      { id:'anesSociety', t:'学会への入会が必要でしたか？', type:'radio', opts:YN, showIf:hasAnes },
-
-      { id:'roleHead', type:'head', t:'これまでにあったこと',
-        hint:'自己評価ではなく、実際にあったかどうかだけ答えてください。' },
       { id:'taught',    t:'新人・後輩の教育を任されたことは？', type:'radio', opts:['ある','ない'] },
       { id:'taughtN',   t:'何人くらい？', type:'number', unit:'人', range:[1, 30], showIf:() => A.taught === 'ある' },
       { id:'represent', t:'学会・展示会・セミナーに医院の代表として行ったことは？', type:'radio', opts:['ある','ない'] },
@@ -80,7 +75,7 @@ const STEPS = [
       { id:'teachInterest', t:'人に教えることに興味はありますか？', type:'radio',
         opts:['すごくある','少しある','わからない','ない'] },
       { id:'future', t:'3年後、どうなっていたいですか？', type:'radio',
-        opts:['今のまま安定','専門を深める','教える側になる','独立する','職種を変える','わからない'],
+        opts:['今のまま安定','専門を深める','教える・伝える側にまわる','独立する','職種を変える','わからない'],
         hint:'「わからない」で構いません。むしろそこから考えるための質問です。' },
     ],
   },
@@ -88,7 +83,7 @@ const STEPS = [
     title: '工夫していること', note: 'ここは任意です。書かなくても結果は全部読めます。',
     qs: [
       { id:'freeHead', type:'head', t:'',
-        hint:'ここに書いたことが、そのまま「人に教えられること」の材料になります。うまく言えなくて大丈夫です。' },
+        hint:'ここに書いたことが、そのまま「人に教えられること」の材料になります。箇条書きでも、途中で切れていても大丈夫です。文章にする必要はありません。思いついた順にどうぞ。' },
       { id:'leftHand', t:'左利きで困った場面と、どう対処したか', type:'textarea',
         hint:'器具、ポジション、ミラーの角度、ユニットの配置など。思いつく範囲で。',
         showIf:() => A.handedness === '左' },
@@ -169,6 +164,20 @@ function field(q) {
       inp.type = q.type; inp.name = q.id; inp.value = o;
       if (q.type === 'radio') inp.checked = A[q.id] === o;
       else inp.checked = (A[q.id] || []).includes(o);
+
+      // ラジオは仕様上、一度選ぶと解除できない。誤タップを戻せないと
+      // 「答えたくない項目は空欄のまま」が守れないので、押し直しで解除する。
+      if (q.type === 'radio') {
+        let wasOn = false;
+        inp.addEventListener('pointerdown', () => { wasOn = A[q.id] === o; });
+        inp.addEventListener('click', () => {
+          if (!wasOn) return;
+          inp.checked = false;
+          A[q.id] = null;
+          if (REDRAW_ON.includes(q.id)) render(true);
+        });
+      }
+
       inp.onchange = () => {
         if (q.type === 'radio') {
           A[q.id] = o;
@@ -179,7 +188,7 @@ function field(q) {
         }
         // 同じステップ内の表示に影響するものだけ再描画する（スクロール位置は保持）
         // priority は上限3件で古い選択が外れるため、チェック状態を合わせ直す必要がある
-        if (['certs', 'taught', 'fields', 'priority'].includes(q.id)) render(true);
+        if (REDRAW_ON.includes(q.id)) render(true);
       };
       lb.appendChild(inp);
       lb.appendChild(document.createTextNode(o));
@@ -230,10 +239,8 @@ const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 // 麻酔認定の判別。断定できないときは断定しない。
 function anesthesia() {
   if (!hasAnes()) return null;
-  if (A.anesCases === 'はい') return { id:'anesthesia-jdsa', sure:true };
-  const soc = [A.anesOral, A.anesBls, A.anesSociety].filter(v => v === 'はい').length;
-  if (soc >= 2) return { id:'anesthesia-jdsa', sure:true };
-  if (A.anesOneDay === 'はい' && A.anesCases === 'いいえ') return { id:'anesthesia-jda', sure:true };
+  if (A.anesIssuer === '日本歯科麻酔学会') return { id:'anesthesia-jdsa', sure:true };
+  if (A.anesIssuer === '日本歯科医学振興機構（JDA）') return { id:'anesthesia-jda', sure:true };
   return { id:null, sure:false };
 }
 
@@ -281,7 +288,7 @@ function result() {
     }
     // 教える側に興味がないと答えた人に、教員を「すすめない」と伝えても情報にならない。
     // カード自体は下に残すので、まとめからだけ外す。
-    const careAboutTeaching = A.teachInterest !== 'ない' || A.future === '教える側になる';
+    const careAboutTeaching = A.teachInterest !== 'ない' || A.future === '教える・伝える側にまわる';
     if (nope.length && careAboutTeaching) {
       h += '<p style="margin:.6rem 0 .2rem"><strong>調べた結果、すすめないもの</strong></p>' +
         '<ul class="plain">' + nope.map(t => '<li>' + t.name + '</li>').join('') + '</ul>';
@@ -431,15 +438,6 @@ function result() {
       '資格や年数と違って、これは他の人が持っていないものです。</span>'));
   }
 
-  // コピー用
-  const dump = document.createElement('div');
-  dump.innerHTML = '<h3>回答の控え</h3>' +
-    '<p class="hint">必要なら下のテキストをコピーして使ってください。送るかどうかは自由です。</p>';
-  const ta = document.createElement('textarea');
-  ta.className = 'copy'; ta.readOnly = true; ta.value = dumpText();
-  dump.appendChild(ta);
-  w.appendChild(dump);
-
   const nav = document.createElement('div');
   nav.className = 'nav';
   const back = document.createElement('button');
@@ -459,7 +457,7 @@ function trackScore(t) {
   if (t.id === 'instructor') {
     if (A.teachInterest === 'すごくある') s += 4;
     else if (A.teachInterest === '少しある') s += 2;
-    if (A.future === '専門を深める' || A.future === '教える側になる') s += 2;
+    if (A.future === '専門を深める' || A.future === '教える・伝える側にまわる') s += 2;
     if (A.taught === 'ある') s += 2;
   }
   if (t.id === 'corporate') {
@@ -576,39 +574,6 @@ function trackCard(t, idx) {
   return d;
 }
 
-function dumpText() {
-  const lines = [];
-  STEPS.forEach(st => {
-    const body = [];
-    st.qs.forEach(q => {
-      if (q.type === 'head') return;
-      let v = A[q.id];
-      if (q.type === 'fieldYears') {
-        const fy = A.fieldYears || {};
-        const keys = (A.fields || []).filter(k => fy[k] != null);
-        v = keys.map(k => k + ' ' + fy[k] + '年').join(' / ');
-      }
-      if (Array.isArray(v)) v = v.join('、');
-      if (v === undefined || v === null || v === '') return;
-      body.push('・' + q.t + ' → ' + v);
-    });
-    if (body.length) { lines.push('■ ' + st.title); lines.push.apply(lines, body); lines.push(''); }
-  });
-
-  // 回答だけを控えても、あとで見返したときに結果が分からない。診断の結論も入れる。
-  const ranked = rankedTracks();
-  lines.push('■ この先の選択肢（上から順）');
-  ranked.forEach((t, i) => {
-    lines.push('・' + (i + 1) + '. ' + t.name + '（' + VERDICT_LABEL[t.verdict] + '）');
-    if (t.income) lines.push('　　収入: ' + t.income.text);
-    if (t.blocker) lines.push('　　※ ' + t.blocker);
-    if (t.firstStep) lines.push('　　最初の一歩: ' + t.firstStep);
-  });
-  lines.push('');
-  lines.push('※ 数値の出典は結果画面の各カードに併記しています。');
-  return lines.join('\n');
-}
-
 // 出典件数（フッター）
 (function () {
   const srcs = new Set();
@@ -624,6 +589,7 @@ function dumpText() {
   [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });
   $('#srccount').textContent = srcs.size;
+  $('#introN').textContent = MARKET.employedHygienists.toLocaleString();
 })();
 
 render();

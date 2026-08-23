@@ -242,6 +242,18 @@ function card(cls, html) {
   d.className = cls; d.innerHTML = html; return d;
 }
 
+// 「他の人が実際にどう扱ったか」の記録。自己評価ではないので、冒頭の要約にも使う。
+function otherPeopleFacts() {
+  const f = [];
+  if (A.taught === 'ある') f.push('新人・後輩の教育を任された' + (A.taughtN ? '（' + A.taughtN + '人）' : ''));
+  if (A.represent === 'ある') f.push('医院の代表として学会・展示会に行った');
+  if (A.consulted && A.consulted !== 'ない') f.push('院長や同僚から相談される（' + A.consulted + '）');
+  if (A.requested && A.requested !== 'ない') f.push('患者さんから指名される（' + A.requested + '）');
+  if (A.chooseKit === 'ある') f.push('器材・材料の選定に関わった');
+  if (A.introduced === 'ある') f.push('新しい技術・材料を最初に導入した');
+  return f;
+}
+
 function result() {
   const w = document.createElement('div');
   w.className = 'step active';
@@ -250,6 +262,30 @@ function result() {
     '<p class="note">自己評価ではなく、答えていただいた事実と公的統計だけで並べています。</p></div>';
 
   const M = MARKET, S = SALARY;
+  const facts = otherPeopleFacts();
+
+  // 0. 先に結論を出す。画面が長いので、上から順に読まなくても要点が分かるようにする。
+  const ranked = rankedTracks();
+  const top = ranked.filter(t => t.verdict !== 'not-recommended').slice(0, 2);
+  const nope = ranked.filter(t => t.verdict === 'not-recommended');
+  const bits = [];
+  if (A.years) bits.push('実務 <strong>' + A.years + ' 年</strong>');
+  if ((A.fields || []).length) bits.push('通ってきた領域 <strong>' + A.fields.length + ' つ</strong>');
+  if (facts.length) bits.push('まわりが実際に頼った記録 <strong>' + facts.length + ' 件</strong>');
+  if (bits.length || top.length) {
+    let h = '<span class="tag">まとめ</span>';
+    if (bits.length) h += '<p style="margin:.2rem 0 .8rem">' + bits.join(' / ') + '</p>';
+    if (top.length) {
+      h += '<p style="margin:.6rem 0 .2rem"><strong>いま条件が合っているもの</strong></p>' +
+        '<ul class="plain">' + top.map(t => '<li>' + t.name + '</li>').join('') + '</ul>';
+    }
+    if (nope.length) {
+      h += '<p style="margin:.6rem 0 .2rem"><strong>調べた結果、すすめないもの</strong></p>' +
+        '<ul class="plain">' + nope.map(t => '<li>' + t.name + '</li>').join('') + '</ul>';
+    }
+    h += '<span class="cap">それぞれの理由は下の「この先の選択肢」に書いています。</span>';
+    w.appendChild(card('card flag', h));
+  }
 
   // 1. 母数
   w.appendChild(card('card',
@@ -327,13 +363,6 @@ function result() {
   }
 
   // 5. 他者からの扱い
-  const facts = [];
-  if (A.taught === 'ある') facts.push('新人・後輩の教育を任された' + (A.taughtN ? '（' + A.taughtN + '人）' : ''));
-  if (A.represent === 'ある') facts.push('医院の代表として学会・展示会に行った');
-  if (A.consulted && A.consulted !== 'ない') facts.push('院長や同僚から相談される（' + A.consulted + '）');
-  if (A.requested && A.requested !== 'ない') facts.push('患者さんから指名される（' + A.requested + '）');
-  if (A.chooseKit === 'ある') facts.push('器材・材料の選定に関わった');
-  if (A.introduced === 'ある') facts.push('新しい技術・材料を最初に導入した');
   if (facts.length) {
     w.appendChild(card('card flag',
       '<span class="tag">まわりからの扱い</span>' +
@@ -382,7 +411,7 @@ function result() {
     ((A.priority || []).length ? '<strong>' + A.priority.join('・') + '</strong>' : 'もの') +
     ' と照らして並べています。';
   w.appendChild(lead);
-  rankedTracks().forEach(t => w.appendChild(trackCard(t)));
+  rankedTracks().forEach((t, i) => w.appendChild(trackCard(t, i)));
 
   // 9. 書いてくれた工夫
   const notes = [
@@ -456,14 +485,15 @@ const VERDICT_LABEL = {
   'not-recommended': '調べた結果、すすめない',
 };
 
-function trackCard(t) {
+function trackCard(t, idx) {
   const srcs = [];
   const addSrc = u => { if (u && srcs.indexOf(u) < 0) srcs.push(u); };
 
-  let html = '<span class="tag">' + VERDICT_LABEL[t.verdict] + '</span>' +
+  const head = '<span class="tag">' + VERDICT_LABEL[t.verdict] + '</span>' +
     '<span class="tname">' + t.name + '</span>' +
-    '<span class="cap">' + t.summary + '</span>' +
-    '<p style="margin:.8rem 0 0">' + t.reality + '</p>';
+    '<span class="cap">' + t.summary + '</span>';
+
+  let html = '<p style="margin:.8rem 0 0">' + t.reality + '</p>';
 
   if (t.blocker) {
     html += '<p class="blk">' + t.blocker + '</p>';
@@ -531,7 +561,12 @@ function trackCard(t) {
   addSrc(t.source);
   html += '<p class="src">出典: ' + srcs.join('<br>') + '</p>';
 
-  return card(t.verdict === 'not-recommended' ? 'card' : 'card flag', html);
+  // 全部を開いたままにすると縦に長くなりすぎて読まれない。上位2件だけ開く。
+  const d = document.createElement('details');
+  d.className = 'card' + (t.verdict === 'not-recommended' ? '' : ' flag');
+  d.open = idx < 2;
+  d.innerHTML = '<summary>' + head + '</summary>' + html;
+  return d;
 }
 
 function dumpText() {
@@ -552,6 +587,17 @@ function dumpText() {
     });
     if (body.length) { lines.push('■ ' + st.title); lines.push.apply(lines, body); lines.push(''); }
   });
+
+  // 回答だけを控えても、あとで見返したときに結果が分からない。診断の結論も入れる。
+  const ranked = rankedTracks();
+  lines.push('■ この先の選択肢（上から順）');
+  ranked.forEach((t, i) => {
+    lines.push('・' + (i + 1) + '. ' + t.name + '（' + VERDICT_LABEL[t.verdict] + '）');
+    if (t.income) lines.push('　　収入: ' + t.income.text);
+    if (t.blocker) lines.push('　　※ ' + t.blocker);
+  });
+  lines.push('');
+  lines.push('※ 数値の出典は結果画面の各カードに併記しています。');
   return lines.join('\n');
 }
 

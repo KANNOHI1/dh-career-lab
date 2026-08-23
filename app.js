@@ -28,9 +28,9 @@ const STEPS = [
   {
     title: '経験の内訳', note: 'ここが一番大事なところです。1分ほど。',
     qs: [
-      { id:'years', t:'歯科衛生士として働いた年数は？', type:'number', unit:'年', range:[0, 40],
+      { id:'years', t:'歯科衛生士として働いた年数は？', type:'number', unit:'年', range:[0, 25],
         hint:'ブランクを除いた実働の年数' },
-      { id:'breakYears', t:'ブランクはありましたか？ 何年くらい？', type:'number', unit:'年', range:[0, 20],
+      { id:'breakYears', t:'ブランクはありましたか？ 何年くらい？', type:'number', unit:'年', range:[0, 15],
         hint:'なければ 0' },
       { id:'fields', t:'通った診療領域は？', type:'checkbox', opts:FIELDS, hint:'当てはまるものすべて' },
       { id:'fieldYears', t:'それぞれ何年くらいですか？', type:'fieldYears',
@@ -186,7 +186,7 @@ function field(q) {
       box.appendChild(lb);
     });
   } else if (q.type === 'number') {
-    box.appendChild(numberSelect(q.range || [0, 30], q.unit || '', A[q.id],
+    box.appendChild(numberSelect(q.range || [0, 25], q.unit || '', A[q.id],
       v => { A[q.id] = v; }));
   } else if (q.type === 'select') {
     const sel = document.createElement('select');
@@ -214,7 +214,7 @@ function field(q) {
     sel.forEach(f => {
       const row = document.createElement('div');
       row.innerHTML = '<span class="lb">' + f + '</span>';
-      row.appendChild(numberSelect([0, 30], '年', A.fieldYears[f], v => { A.fieldYears[f] = v; }));
+      row.appendChild(numberSelect([0, 25], '年', A.fieldYears[f], v => { A.fieldYears[f] = v; }));
       box.appendChild(row);
     });
   }

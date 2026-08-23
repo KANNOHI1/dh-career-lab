@@ -1,0 +1,16 @@
+# ホワイトリスト方式。既定ですべて無視し、公開するものだけ明示的に許可する。
+# 対象者は実在人物。research/ STATUS.md claude_logs/ memory/ には
+# 氏名・生年月日・経歴・自己評価に関する記述が含まれるため、絶対に公開しない。
+/*
+
+!.gitignore
+!index.html
+!app.js
+!README.md
+
+!data/
+data/*
+!data/market.js
+!data/certifications.js
+!data/salary.js
+!data/tracks.js

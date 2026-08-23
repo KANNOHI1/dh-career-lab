@@ -18,7 +18,7 @@ const STEPS = [
         opts:['一般歯科','矯正歯科','口腔外科・病院','訪問診療','企業','教育機関','行政・公衆衛生','離職中'] },
       { id:'employment', t:'雇用形態は？', type:'radio',
         opts:['常勤','パート・非常勤','フリーランス','離職中'] },
-      { id:'daysPerWeek', t:'週に何日働いていますか？', type:'number', unit:'日' },
+      { id:'daysPerWeek', t:'週に何日働いていますか？', type:'number', unit:'日', range:[1, 7] },
       { id:'income', t:'今の年収は？', type:'radio',
         hint:'ざっくりで大丈夫です。答えたくなければ選ばなくて構いません。',
         opts:['〜250万','250〜350万','350〜450万','450〜550万','550万〜','答えたくない'] },
@@ -28,9 +28,9 @@ const STEPS = [
   {
     title: '経験の内訳', note: 'ここが一番大事なところです。1分ほど。',
     qs: [
-      { id:'years', t:'歯科衛生士として働いた年数は？', type:'number', unit:'年',
+      { id:'years', t:'歯科衛生士として働いた年数は？', type:'number', unit:'年', range:[0, 40],
         hint:'ブランクを除いた実働の年数' },
-      { id:'breakYears', t:'ブランクはありましたか？ 何年くらい？', type:'number', unit:'年',
+      { id:'breakYears', t:'ブランクはありましたか？ 何年くらい？', type:'number', unit:'年', range:[0, 20],
         hint:'なければ 0' },
       { id:'fields', t:'通った診療領域は？', type:'checkbox', opts:FIELDS, hint:'当てはまるものすべて' },
       { id:'fieldYears', t:'それぞれ何年くらいですか？', type:'fieldYears',
@@ -61,7 +61,7 @@ const STEPS = [
       { id:'roleHead', type:'head', t:'これまでにあったこと',
         hint:'自己評価ではなく、実際にあったかどうかだけ答えてください。' },
       { id:'taught',    t:'新人・後輩の教育を任されたことは？', type:'radio', opts:['ある','ない'] },
-      { id:'taughtN',   t:'何人くらい？', type:'number', unit:'人', showIf:() => A.taught === 'ある' },
+      { id:'taughtN',   t:'何人くらい？', type:'number', unit:'人', range:[1, 30], showIf:() => A.taught === 'ある' },
       { id:'represent', t:'学会・展示会・セミナーに医院の代表として行ったことは？', type:'radio', opts:['ある','ない'] },
       { id:'consulted', t:'院長や同僚から相談される側になることは？', type:'radio', opts:['よくある','ときどきある','ない'] },
       { id:'requested', t:'患者さんから指名されることは？', type:'radio', opts:['よくある','ときどきある','ない'] },
@@ -135,6 +135,22 @@ function render(keepScroll) {
   window.scrollTo(0, y);
 }
 
+// 数値のプルダウン。スマホで数字キーボードを出さずに選べるようにする。
+// 上限は「N年以上」として頭打ちを表現する。
+function numberSelect(range, unit, value, onPick) {
+  const [min, max] = range;
+  const sel = document.createElement('select');
+  sel.className = 'num';
+  let html = '<option value="">選択</option>';
+  for (let i = min; i <= max; i++) {
+    const label = i + unit + (i === max ? '以上' : '');
+    html += '<option value="' + i + '"' + (value === i ? ' selected' : '') + '>' + label + '</option>';
+  }
+  sel.innerHTML = html;
+  sel.onchange = () => { onPick(sel.value === '' ? null : Number(sel.value)); };
+  return sel;
+}
+
 function field(q) {
   const d = document.createElement('div');
   d.className = 'q';
@@ -170,12 +186,8 @@ function field(q) {
       box.appendChild(lb);
     });
   } else if (q.type === 'number') {
-    const inp = document.createElement('input');
-    inp.type = 'number'; inp.min = 0;
-    inp.value = A[q.id] != null ? A[q.id] : '';
-    inp.oninput = () => { A[q.id] = inp.value === '' ? null : Number(inp.value); };
-    box.appendChild(inp);
-    if (q.unit) box.appendChild(document.createTextNode(' ' + q.unit));
+    box.appendChild(numberSelect(q.range || [0, 30], q.unit || '', A[q.id],
+      v => { A[q.id] = v; }));
   } else if (q.type === 'select') {
     const sel = document.createElement('select');
     sel.innerHTML = '<option value="">選択してください</option>' +
@@ -201,13 +213,8 @@ function field(q) {
     }
     sel.forEach(f => {
       const row = document.createElement('div');
-      const inp = document.createElement('input');
-      inp.type = 'number'; inp.min = 0;
-      inp.value = A.fieldYears[f] != null ? A.fieldYears[f] : '';
-      inp.oninput = () => { A.fieldYears[f] = inp.value === '' ? null : Number(inp.value); };
       row.innerHTML = '<span class="lb">' + f + '</span>';
-      row.appendChild(inp);
-      row.appendChild(document.createTextNode(' 年'));
+      row.appendChild(numberSelect([0, 30], '年', A.fieldYears[f], v => { A.fieldYears[f] = v; }));
       box.appendChild(row);
     });
   }
@@ -288,21 +295,23 @@ function result() {
     const c = CERTIFICATIONS.find(x => x.id === an.id);
     let html = '<span class="tag">保有資格</span>' +
       '<span class="cap">' + c.name + '<br>' + c.issuer + '</span>';
-    if (c.holderRatio) {
+    // 希少性の根拠として使える資格かどうかで、書き方をはっきり分ける。
+    // 数字が実態と食い違うと、読んだ本人が一番先に気づく。
+    if (c.usableAsRarity && c.holderRatio) {
       html += '<span class="big">全国 ' + c.holders.toLocaleString() + ' 名</span>' +
         '<span class="cap">働いている歯科衛生士 ' + M.employedHygienists.toLocaleString() +
         ' 人に対して <strong>' + pct(c.holderRatio) + '</strong>。およそ ' +
         Math.round(1 / c.holderRatio).toLocaleString() + ' 人に 1 人です。</span>';
     } else {
-      html += '<span class="big">累計 ' + c.holders.toLocaleString() + ' 名以上</span>' +
-        '<span class="cap">この数字は<strong>累計の受講者数で、歯科医師を含みます</strong>。' +
-        '歯科衛生士だけの人数は公表されていません。つまりこれは上限であって、実際の保有者はもっと少ない。' +
-        '上限で見ても、働いている歯科衛生士の <strong>' + pct(c.holders / M.employedHygienists) +
-        '</strong>（およそ ' + Math.round(M.employedHygienists / c.holders) +
-        ' 人に 1 人）以下ということになります。</span>';
+      html += '<p style="margin:.5rem 0 0">' + c.realityNote + '</p>' +
+        '<span class="cap"><strong>だからこれは、珍しさを示すものではありません。</strong>' +
+        'ただし残る事実はあります。実際に麻酔を任せる体制のある医院で働いていて、' +
+        'それを日常的に使っているということです。' +
+        '制度としてできることと、現場で実際に任されることは別です。</span>';
     }
-    html += '<p class="src">出典: ' + c.source + '</p>';
-    w.appendChild(card('card flag', html));
+    html += '<p class="src">出典: ' + c.source +
+      (c.realitySource ? '<br>実態: ' + c.realitySource : '') + '</p>';
+    w.appendChild(card('card', html));
   } else if (an) {
     const a = CERTIFICATIONS.find(x => x.id === 'anesthesia-jdsa');
     const b = CERTIFICATIONS.find(x => x.id === 'anesthesia-jda');

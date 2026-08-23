@@ -26,6 +26,8 @@ const CERTIFICATIONS = [
     source: 'https://jdsa.jp/info/history.html',
     sourceRule: 'https://jdsa.jp/media-download/258/4c0fc79dd172078b/PDF/',
     fetchedAt: '2026-08-23',
+    usableAsRarity: true,
+    realityNote: null,
   },
   {
     id: 'anesthesia-jda',
@@ -47,6 +49,17 @@ const CERTIFICATIONS = [
     incomeImpact: null,
     source: 'https://oned.jp/career/articles/6851be64-bc6c-4b18-a71e-aa94e224b1e8',
     fetchedAt: '2026-08-23',
+    // 希少性の根拠には使わない。現場の実態がそれを支持しないため。
+    // 保有者の証言（2026-08-23 聞き取り）:
+    //   「衛生士は法律上本来みんな出来る。今までそこまでやることじゃなかったが、
+    //     最近そういう流れになってきて、セミナーを受けて認定されれば正式にできるから
+    //     周りも増えている。うちの衛生士はみんなできる」
+    // 1日講習で取得でき、保有者が増加中。医院単位で全員保有のケースがある。
+    usableAsRarity: false,
+    realityNote: '1日の講習で取得でき、保有者は増加中。法律上は資格がなくても' +
+                 '歯科医師の指示・監督下で実施できるため、資格そのものが権限を増やすわけではない。' +
+                 '医院によっては在籍する歯科衛生士が全員保有している。',
+    realitySource: '保有者本人からの聞き取り（2026-08-23）',
   },
 
   // ---- 領域別の学会認定 ----

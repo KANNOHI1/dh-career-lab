@@ -283,7 +283,6 @@ function result() {
       h += '<p style="margin:.6rem 0 .2rem"><strong>調べた結果、すすめないもの</strong></p>' +
         '<ul class="plain">' + nope.map(t => '<li>' + t.name + '</li>').join('') + '</ul>';
     }
-    h += '<span class="cap">それぞれの理由は下の「この先の選択肢」に書いています。</span>';
     w.appendChild(card('card flag', h));
   }
 
@@ -480,7 +479,7 @@ function rankedTracks() {
 }
 
 const VERDICT_LABEL = {
-  'recommend': '有力',
+  'recommend': '条件が合う',
   'conditional': '条件つき',
   'not-recommended': '調べた結果、すすめない',
 };
@@ -558,6 +557,11 @@ function trackCard(t, idx) {
   html += '<p style="margin:.9rem 0 .2rem"><strong>引き換えになるもの</strong></p>' +
     '<ul class="plain">' + t.tradeoffs.map(r => '<li>' + r + '</li>').join('') + '</ul>';
 
+  // 読んで終わりにしない。今日できることを1行だけ置く。
+  if (t.firstStep) {
+    html += '<p class="step1"><strong>最初の一歩</strong><br>' + t.firstStep + '</p>';
+  }
+
   addSrc(t.source);
   html += '<p class="src">出典: ' + srcs.join('<br>') + '</p>';
 
@@ -595,6 +599,7 @@ function dumpText() {
     lines.push('・' + (i + 1) + '. ' + t.name + '（' + VERDICT_LABEL[t.verdict] + '）');
     if (t.income) lines.push('　　収入: ' + t.income.text);
     if (t.blocker) lines.push('　　※ ' + t.blocker);
+    if (t.firstStep) lines.push('　　最初の一歩: ' + t.firstStep);
   });
   lines.push('');
   lines.push('※ 数値の出典は結果画面の各カードに併記しています。');

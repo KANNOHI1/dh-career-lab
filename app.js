@@ -73,6 +73,7 @@ const STEPS = [
     title: '望む方向と制約', note: '出せる選択肢を絞るために使います。40秒ほど。',
     qs: [
       { id:'priority', t:'大事な順に、上位3つを選んでください', type:'checkbox', max:3,
+        hint:'4つ目を選ぶと、いちばん先に選んだものが外れます。',
         opts:['収入','時間の自由','専門性','自分の裁量','安定'] },
       { id:'constraints', t:'動かせない条件はありますか？', type:'checkbox',
         opts:['転居できない','夜間は無理','週◯日以上は無理','学費に上限がある','特になし'] },
@@ -103,7 +104,8 @@ const STEPS = [
 // ---------- レンダリング ----------
 let cur = 0;
 
-function render() {
+function render(keepScroll) {
+  const y = keepScroll ? window.scrollY : 0;
   const prog = $('#progress');
   prog.innerHTML = STEPS.map((_, i) =>
     '<span class="' + (i <= cur ? 'done' : '') + '"></span>').join('') +
@@ -111,7 +113,7 @@ function render() {
 
   const host = $('#steps');
   host.innerHTML = '';
-  if (cur >= STEPS.length) { host.appendChild(result()); window.scrollTo(0, 0); return; }
+  if (cur >= STEPS.length) { host.appendChild(result()); window.scrollTo(0, y); return; }
 
   const st = STEPS[cur];
   const el = document.createElement('div');
@@ -130,7 +132,7 @@ function render() {
 
   if ($('#back')) $('#back').onclick = () => { cur--; render(); };
   $('#next').onclick = () => { cur++; render(); };
-  window.scrollTo(0, 0);
+  window.scrollTo(0, y);
 }
 
 function field(q) {
@@ -159,7 +161,9 @@ function field(q) {
           A[q.id] = inp.checked ? now.concat([o]) : now.filter(x => x !== o);
           if (q.max && A[q.id].length > q.max) A[q.id] = A[q.id].slice(-q.max);
         }
-        if (['certs', 'handedness', 'taught', 'fields'].includes(q.id)) render();
+        // 同じステップ内の表示に影響するものだけ再描画する（スクロール位置は保持）
+        // priority は上限3件で古い選択が外れるため、チェック状態を合わせ直す必要がある
+        if (['certs', 'taught', 'fields', 'priority'].includes(q.id)) render(true);
       };
       lb.appendChild(inp);
       lb.appendChild(document.createTextNode(o));

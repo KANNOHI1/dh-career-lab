@@ -371,30 +371,20 @@ function result() {
       '<p class="src">' + S.curveCaveat + '<br>出典: ' + S.sourceName + ' / ' + S.source + '</p>'));
   }
 
-  // 8. 教育トラック（要件充足の事実のみ。勧めない）
-  const edu = TRACKS.find(t => t.id === 'education');
-  if (A.years >= 4) {
-    w.appendChild(card('card',
-      '<span class="tag">要件を満たしているもの</span>' +
-      '<span class="cap">' + edu.name + '</span>' +
-      '<span class="big">実務 ' + A.years + ' 年 / 必要 4 年</span>' +
-      '<span class="cap">法令上の要件は「免許取得後4年以上の業務従事経験」と' +
-      '「専任教員講習会 I〜V の修了」です。経験年数の条件は、すでに満たしています。</span>' +
-      '<ul class="plain">' + edu.entryRequirements.map(r => '<li>' + r + '</li>').join('') + '</ul>' +
-      '<span class="cap">養成校で働く歯科衛生士は、2年で ' +
-      Math.abs(M.educationInstitutionChange.deltaCount) + ' 人（' +
-      Math.abs(Math.round(M.educationInstitutionChange.deltaRatio * 100)) + '%）減っています。</span>' +
-      '<p class="src">年収や講習の費用は、いま調べています。<br>出典: ' + edu.source + '</p>'));
-  }
+  // 8. この先の選択肢
+  const h = document.createElement('h3');
+  h.textContent = 'この先の選択肢';
+  w.appendChild(h);
+  const lead = document.createElement('p');
+  lead.className = 'hint';
+  lead.innerHTML = '要件と収入を確認できたものだけを出しています。' +
+    '「大事な順」に選んでいただいた ' +
+    ((A.priority || []).length ? '<strong>' + A.priority.join('・') + '</strong>' : 'もの') +
+    ' と照らして並べています。';
+  w.appendChild(lead);
+  rankedTracks().forEach(t => w.appendChild(trackCard(t)));
 
-  // 9. まだ出せないもの
-  const notReady = TRACKS.filter(t => !t.confirmed).map(t => t.name);
-  w.appendChild(card('unknown',
-    '<strong>この先の選択肢は、いま調べています</strong><br>' +
-    '<ul class="plain">' + notReady.map(n => '<li>' + n + '</li>').join('') + '</ul>' +
-    'それぞれ何が必要で、収入がどう変わるのかが分かり次第、ここに出します。'));
-
-  // 10. 書いてくれた工夫
+  // 9. 書いてくれた工夫
   const notes = [
     ['左利きでの工夫', A.leftHand],
     ['ブランクからの戻り方', A.comeback],
@@ -427,6 +417,121 @@ function result() {
   nav.appendChild(back);
   w.appendChild(nav);
   return w;
+}
+
+// ---------- この先の選択肢 ----------
+// 並べ替えの根拠は「大事な順」と、これまでの回答の事実だけ。
+// 調べた結果すすめないと分かったものは、隠さず最後に置く。
+function trackScore(t) {
+  let s = 0;
+  (A.priority || []).forEach(p => { if (t.fitFor.indexOf(p) >= 0) s += 2; });
+  if (t.id === 'instructor') {
+    if (A.teachInterest === 'すごくある') s += 4;
+    else if (A.teachInterest === '少しある') s += 2;
+    if (A.future === '専門を深める' || A.future === '教える側になる') s += 2;
+    if (A.taught === 'ある') s += 2;
+  }
+  if (t.id === 'corporate') {
+    if (A.represent === 'ある') s += 2;
+    if (A.introduced === 'ある' || A.chooseKit === 'ある') s += 1;
+    if (A.future === '職種を変える') s += 2;
+  }
+  if (t.id === 'public-health' && (A.future === '今のまま安定' || A.future === '職種を変える')) s += 1;
+  if ((t.id === 'home-visit' || t.id === 'care-manager') && (A.fields || []).indexOf('訪問') >= 0) s += 3;
+  if (t.id === 'care-manager' && Number(A.years) < 5) s -= 3;   // 受験要件に届かない
+  return s;
+}
+
+function rankedTracks() {
+  return TRACKS.filter(t => t.confirmed).sort((a, b) => {
+    const an = a.verdict === 'not-recommended', bn = b.verdict === 'not-recommended';
+    if (an !== bn) return an ? 1 : -1;
+    return trackScore(b) - trackScore(a);
+  });
+}
+
+const VERDICT_LABEL = {
+  'recommend': '有力',
+  'conditional': '条件つき',
+  'not-recommended': '調べた結果、すすめない',
+};
+
+function trackCard(t) {
+  const srcs = [];
+  const addSrc = u => { if (u && srcs.indexOf(u) < 0) srcs.push(u); };
+
+  let html = '<span class="tag">' + VERDICT_LABEL[t.verdict] + '</span>' +
+    '<span class="tname">' + t.name + '</span>' +
+    '<span class="cap">' + t.summary + '</span>' +
+    '<p style="margin:.8rem 0 0">' + t.reality + '</p>';
+
+  if (t.blocker) {
+    html += '<p class="blk">' + t.blocker + '</p>';
+  }
+
+  // 養成校が縮んでいる事実は、数字で出す
+  if (t.marketShrink) {
+    const y = t.marketShrink.years;
+    html += '<p style="margin:.8rem 0 0"><strong>養成校の定員割れ</strong><br>' +
+      y.map(r => r.year + '年 ' + Math.round(r.underfilledRatio * 100) + '%').join(' → ') + '</p>' +
+      '<span class="cap">' + t.marketShrink.note + '</span>' +
+      '<span class="cap">閉校・募集停止: ' + t.marketShrink.closures.join(' / ') + '</span>';
+    addSrc(t.marketShrink.source); addSrc(t.marketShrink.capacitySource);
+  }
+
+  // 収入
+  if (t.income) {
+    html += '<p style="margin:.9rem 0 .2rem"><strong>収入</strong><br>' + t.income.text + '</p>' +
+      '<ul class="plain">' + t.income.examples.map(e => {
+        addSrc(e.source);
+        return '<li>' + e.org + '：' + e.value + (e.source ? '' : '（出典が確認できていないため参考）') + '</li>';
+      }).join('') + '</ul>' +
+      '<span class="cap">いずれも個別の求人に出ていた金額です。相場ではありません。' +
+      '全国の平均は ' + man(SALARY.national.annualYen) + '。</span>';
+  } else if (t.incomeNote) {
+    html += '<p style="margin:.9rem 0 0"><strong>収入</strong><br>' + t.incomeNote + '</p>';
+  }
+
+  // 実際に進んだ人の経歴
+  if (t.examples) {
+    html += '<p style="margin:.9rem 0 .2rem"><strong>実際に進んだ人</strong></p>' +
+      '<ul class="plain">' + t.examples.map(e => {
+        addSrc(e.source);
+        return '<li>' + e.name + '：' + e.path + '</li>';
+      }).join('') + '</ul>';
+  }
+
+  // 入るために必要なもの
+  html += '<p style="margin:.9rem 0 .2rem"><strong>入るために必要なもの</strong></p>' +
+    '<ul class="plain">' + t.entryRequirements.map(r => '<li>' + r + '</li>').join('') + '</ul>';
+
+  // 年数の要件を満たしているかは、答えた年数から出す
+  if (t.id === 'education' && A.years >= 4) {
+    html += '<span class="cap">実務 ' + A.years + ' 年で、法令上の 4 年は満たしています。' +
+      '足りていないのは年数ではありませんでした。</span>';
+  }
+  if (t.id === 'corporate' && A.years >= 3) {
+    html += '<span class="cap">実務 ' + A.years + ' 年。どの企業の募集要件も超えています。</span>';
+  }
+  if (t.id === 'care-manager' && A.years != null) {
+    html += '<span class="cap">実務 ' + A.years + ' 年。' +
+      (A.years >= 5 ? '受験要件の 5 年は満たしています。' : '受験要件は 5 年以上です。') + '</span>';
+  }
+
+  // 動かせない条件に触れるものだけ出す
+  const hit = (A.constraints || []).filter(c => t.cautions && t.cautions[c]);
+  if (hit.length) {
+    html += '<p style="margin:.9rem 0 .2rem"><strong>選んだ条件との関係</strong></p>' +
+      '<ul class="plain">' + hit.map(c => '<li>' + c + '：' + t.cautions[c] + '</li>').join('') + '</ul>';
+  }
+
+  html += '<p style="margin:.9rem 0 .2rem"><strong>引き換えになるもの</strong></p>' +
+    '<ul class="plain">' + t.tradeoffs.map(r => '<li>' + r + '</li>').join('') + '</ul>';
+
+  addSrc(t.source);
+  html += '<p class="src">出典: ' + srcs.join('<br>') + '</p>';
+
+  return card(t.verdict === 'not-recommended' ? 'card' : 'card flag', html);
 }
 
 function dumpText() {

@@ -265,9 +265,9 @@ function result() {
     w.appendChild(card('card',
       '<span class="cap">あなたの実働年数</span>' +
       '<span class="big">' + A.years + ' 年</span>' +
-      '<span class="cap">歯科衛生士の平均年齢は ' + M.averageAge + ' 歳、40代が ' +
+      '<span class="cap">歯科衛生士の平均年齢は ' + M.averageAge + ' 歳。40代が ' +
       pct(M.ageDistribution.forties) + '、50代以上が ' + pct(M.ageDistribution.fiftiesAndOver) +
-      ' を占めます。経験年数そのものの分布は公表されていないため、「上位◯%」という数字は出せません。</span>' +
+      ' を占めます。</span>' +
       '<p class="src">出典: 令和4年 賃金構造基本統計調査 ほか</p>'));
   }
 
@@ -283,9 +283,7 @@ function result() {
       html += '<span class="cap"><strong>' + deep.join('・') + '</strong> は3年以上。' +
         'かじった経験ではなく、主戦場として通った領域です。</span>';
     }
-    html += '<p class="src">診療科目別に歯科衛生士が何人いるかという統計は公表されていません。' +
-      'そのため「この組み合わせは全国◯人」といった数字は出しません。' +
-      '出せるのは、実際に何年ずつ通ったかという事実だけです。</p>';
+
     w.appendChild(card('card', html));
   }
 
@@ -303,11 +301,9 @@ function result() {
         ' 人に対して <strong>' + pct(c.holderRatio) + '</strong>。およそ ' +
         Math.round(1 / c.holderRatio).toLocaleString() + ' 人に 1 人です。</span>';
     } else {
-      html += '<p style="margin:.5rem 0 0">' + c.realityNote + '</p>' +
-        '<span class="cap"><strong>だからこれは、珍しさを示すものではありません。</strong>' +
-        'ただし残る事実はあります。実際に麻酔を任せる体制のある医院で働いていて、' +
-        'それを日常的に使っているということです。' +
-        '制度としてできることと、現場で実際に任されることは別です。</span>';
+      html += '<span class="cap">実際に麻酔を任せる体制のある医院で働いていて、' +
+        'それを日常的に使っている。<strong>制度としてできることと、' +
+        '現場で任されることは別です。</strong></span>';
     }
     html += '<p class="src">出典: ' + c.source +
       (c.realitySource ? '<br>実態: ' + c.realitySource : '') + '</p>';
@@ -326,7 +322,6 @@ function result() {
 
   if ((A.certs || []).length) {
     w.appendChild(card('unknown',
-      '<strong>ただし、資格そのものにできることの限界も書いておきます。</strong><br>' +
       CERTIFICATION_CAVEAT.implication +
       '<p class="src">出典: ' + CERTIFICATION_CAVEAT.source + '</p>'));
   }
@@ -386,22 +381,18 @@ function result() {
       '<span class="cap">法令上の要件は「免許取得後4年以上の業務従事経験」と' +
       '「専任教員講習会 I〜V の修了」です。経験年数の条件は、すでに満たしています。</span>' +
       '<ul class="plain">' + edu.entryRequirements.map(r => '<li>' + r + '</li>').join('') + '</ul>' +
-      '<p class="src"><strong>ただし、この道を勧めるにはまだ材料が足りません。</strong> ' +
-      '養成校で働く人は2年で ' + Math.abs(M.educationInstitutionChange.deltaCount) + ' 人（' +
-      Math.abs(Math.round(M.educationInstitutionChange.deltaRatio * 100)) + '%）減っています。' +
-      'それが人手不足なのか、学校自体が減っているのかを確認できていません。' +
-      '専任教員の年収も講習会の費用も、公表データを見つけられていません。調査中です。<br>' +
-      '出典: ' + edu.source + '</p>'));
+      '<span class="cap">養成校で働く歯科衛生士は、2年で ' +
+      Math.abs(M.educationInstitutionChange.deltaCount) + ' 人（' +
+      Math.abs(Math.round(M.educationInstitutionChange.deltaRatio * 100)) + '%）減っています。</span>' +
+      '<p class="src">年収や講習の費用は、いま調べています。<br>出典: ' + edu.source + '</p>'));
   }
 
   // 9. まだ出せないもの
   const notReady = TRACKS.filter(t => !t.confirmed).map(t => t.name);
   w.appendChild(card('unknown',
-    '<strong>まだ出せないもの</strong><br>' +
-    '次のキャリアの選択肢については、移行に必要な条件も年収も、信頼できる出典を確認できていません。' +
-    '推測で書くと判断を誤らせるので、空欄のままにしています。' +
+    '<strong>この先の選択肢は、いま調べています</strong><br>' +
     '<ul class="plain">' + notReady.map(n => '<li>' + n + '</li>').join('') + '</ul>' +
-    '調査ができ次第、この画面に追加します。'));
+    'それぞれ何が必要で、収入がどう変わるのかが分かり次第、ここに出します。'));
 
   // 10. 書いてくれた工夫
   const notes = [

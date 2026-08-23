@@ -167,15 +167,24 @@ function field(q) {
 
       // ラジオは仕様上、一度選ぶと解除できない。誤タップを戻せないと
       // 「答えたくない項目は空欄のまま」が守れないので、押し直しで解除する。
+      // click は change より先に走り、選択済みを押した時は change が発火しない。
+      // よって click の時点の A[q.id] は「押す前の値」になる。
       if (q.type === 'radio') {
-        let wasOn = false;
-        inp.addEventListener('pointerdown', () => { wasOn = A[q.id] === o; });
-        inp.addEventListener('click', () => {
-          if (!wasOn) return;
+        const clear = () => {
           inp.checked = false;
           A[q.id] = null;
           if (REDRAW_ON.includes(q.id)) render(true);
-        });
+        };
+        inp.onclick = () => {
+          if (A[q.id] !== o) return;          // これから選ばれる。change に任せる
+          clear();
+        };
+        // 選択済みのラジオで Space を押してもブラウザは click を出さないので、拾い直す
+        inp.onkeydown = (e) => {
+          if (e.key !== ' ' || A[q.id] !== o) return;
+          e.preventDefault();
+          clear();
+        };
       }
 
       inp.onchange = () => {

@@ -819,6 +819,7 @@ function fieldSection() {
   });
 
   box.appendChild(card('unknown',
+    FIELD_CAVEAT.revisionNote + '<br><br>' +
     FIELD_CAVEAT.shinryoNote + '<br><br>' + FIELD_CAVEAT.jihiNote));
 
   return box;
@@ -925,6 +926,13 @@ function regionSection() {
         (a.newGradJobRatioNote ? '<span class="cap">※' + a.newGradJobRatioNote + '</span>' : '') + '</li>' +
         '</ul>' +
         '<span class="cap">歯科衛生士の数は令和2年、診療所と歯科医師は令和6年の調査です。</span>';
+
+      // 歯科医師の実数（人口10万対の指標が無い統計なので、率は作らず実数のまま）
+      if (a.dentists) {
+        html += '<span class="cap">医療施設で働く歯科医師の数（' + a.dentistsYear + '）</span>' +
+          '<ul class="plain"><li><strong>' + a.dentists.toLocaleString() + ' 人</strong>' +
+          '（全国 ' + R.nationalDentists.count.toLocaleString() + ' 人）</li></ul>';
+      }
     }
 
     // 常勤で働いた場合の給与。地域差がいちばん出るところ
@@ -1127,7 +1135,7 @@ function trackCard(t, idx) {
    REGION_DATA.newGradSource,
    REGION_DATA.source, REGION_DATA.national.source,
    REGION_DATA.nationalDH.source, REGION_DATA.nationalClinics.source,
-   REGION_DATA.nationalWage.source, SUPPLY.workload.fullTime.source, SUPPLY.workload.partTime.source].forEach(u => { if (u) srcs.add(u); });
+   REGION_DATA.nationalWage.source, REGION_DATA.nationalDentists.source, SUPPLY.workload.fullTime.source, SUPPLY.workload.partTime.source].forEach(u => { if (u) srcs.add(u); });
   [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource, MARKET.ageDistributionSourceSecondary,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });
   $('#srccount').textContent = srcs.size;

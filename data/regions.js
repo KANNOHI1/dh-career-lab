@@ -15,6 +15,9 @@ const SRC_ISHI_PREF = 'https://www.mhlw.go.jp/toukei/saikin/hw/ishi/24/dl/R06_1g
 const SRC_ESTAT_FACILITY = 'https://www.e-stat.go.jp/dbview?sid=0004048427';   // 令和6年 医療施設調査
 const SRC_ESTAT_DH = 'https://www.e-stat.go.jp/dbview?sid=0004027006';         // 令和2年 衛生行政報告例
 const SRC_ESTAT_WAGE = 'https://www.e-stat.go.jp/dbview?sid=0004007961';       // 令和5年 賃金構造基本統計調査
+// 社会・人口統計体系（統計表 0000010109）。医療施設に従事する歯科医師数の実数。
+// この体系に人口10万対の指標はないため、率は自分で作らず実数のまま出す。
+const SRC_SSDS = 'https://www.e-stat.go.jp/dbview?sid=0000010109';
 
 // 注: app.js に都道府県名リストの REGIONS があるため、こちらは REGION_DATA とする
 const REGION_DATA = {
@@ -35,6 +38,8 @@ const REGION_DATA = {
       // 令和5年 賃金構造基本統計調査（一般労働者・男女計・歯科衛生士）
       wage: { monthlyThousandYen: 265.9, bonusThousandYen: 324.8, hours: 163, overtime: 8,
               age: 41.2, tenure: 5.9, workers: 870 },
+      // 医療施設に従事する歯科医師数（2022年度）。人口10万対は同じ体系に無いので実数のみ
+      dentists: 4147, dentistsYear: '2022年度',
       note: '2050年には5人に2人が65歳以上になります。訪問が必要になる75歳以上の割合は、2030年に 22.0%。' +
             'ただし歯科診療所の数は人口あたりで全国並み（53.5 / 全国 53.6）なのに、' +
             '歯科衛生士は人口あたりで全国より多い（125.0 / 全国 113.2）。' +
@@ -55,6 +60,7 @@ const REGION_DATA = {
       newGradJobRatioNote: '関東/甲信越地区の値。都道府県ごとの公表はない',
       wage: { monthlyThousandYen: 352.9, bonusThousandYen: 412.2, hours: 170, overtime: 16,
               age: 40.2, tenure: 8.7, workers: 3980 },
+      dentists: 16293, dentistsYear: '2022年度',
       note: '高齢化は全国の中では遅い一方、人口あたりの歯科診療所は 74.8 で全国（53.6）の約1.4倍、' +
             '歯科医師も 116.9 で全国最多。医院は密集しています。' +
             'ところが歯科衛生士は人口あたり 107.1 と全国（113.2）より少ない。' +
@@ -67,6 +73,7 @@ const REGION_DATA = {
   newGradSource: 'https://www.kokuhoken.or.jp/zen-eiky/publicity/file/report_2026.pdf',
 
   nationalDH: { hygienists: 142760, per100k: 113.2, year: 2020, source: SRC_ESTAT_DH },
+  nationalDentists: { count: 101919, year: '2022年度', source: SRC_SSDS },
   nationalWage: { monthlyThousandYen: 291.9, bonusThousandYen: 455.5, hours: 164, overtime: 8,
                   age: 37.3, tenure: 7.6, workers: 43380, year: '令和5年', source: SRC_ESTAT_WAGE },
   nationalClinics: { clinics: 66378, per100k: 53.6, year: 2024, source: SRC_ESTAT_FACILITY },

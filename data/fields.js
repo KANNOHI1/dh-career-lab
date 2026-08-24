@@ -27,11 +27,20 @@ const SRC_SEITAI_R02 = 'https://www.mhlw.go.jp/toukei/saikin/hw/iryosd/20/dl/02s
 const SRC_ISHI = 'https://www.mhlw.go.jp/toukei/saikin/hw/ishi/24/dl/R06_1gaikyo.pdf';
 //   G 厚生労働省「令和6年 薬事工業生産動態統計年報」第33表・第34表（歯科材料の生産金額）
 const SRC_YAKUJI = 'https://www.mhlw.go.jp/toukei/list/dl/yakuji_nenpou_all.pdf';
+// 社会医療診療行為別統計の各年（歯科の分冊）。構成割合の推移に使う。
+// 診療報酬は2年ごとに改定され、令和6年は集計月も変わっている。折れ線でつながない。
+const SRC_SHINRYO_YEARS = {
+  '令和2年': 'https://www.mhlw.go.jp/toukei/saikin/hw/sinryo/tyosa20/dl/shika.pdf',
+  '令和3年': 'https://www.mhlw.go.jp/toukei/saikin/hw/sinryo/tyosa21/dl/shika.pdf',
+  '令和4年': 'https://www.mhlw.go.jp/toukei/saikin/hw/sinryo/tyosa22/dl/shika.pdf',
+  '令和5年': 'https://www.mhlw.go.jp/toukei/saikin/hw/sinryo/tyosa23/dl/shika.pdf',
+};
 
 // 統計の読み方についての注意。画面にも出す。
 const FIELD_CAVEAT = {
   shinryoNote: '診療報酬改定で集計月が変わったため、前回との比較には留意が必要と厚生労働省が注記しています。1年分の増減だけで方向を決めつけないでください。',
   jihiNote: '自費でおこなう診療（インプラント・ホワイトニング・自費の矯正）は公的統計に出てきません。市場が小さいという意味ではなく、公的に数えられていないという意味です。',
+  revisionNote: '診療報酬は2年ごとに改定されます（令和2年・4年・6年が改定の年）。点数の付け方そのものが変わるので、年をまたいだ数字は線でつながず、年ごとに並べています。令和6年はさらに集計する月も変わりました。',
   source: SRC_SHINRYO,
 };
 
@@ -45,6 +54,7 @@ const FIELDS_DEMAND = [
       { label: '過去1年に歯科検診を受けた人', value: '58.0%（令和4年）→ 63.8%（令和6年）', source: SRC_SHIKKAN_R6 },
       { label: '8020達成者（80歳で20本以上）', value: '51.6%（令和4年）→ 61.5%（令和6年）', source: SRC_SHIKKAN_R6 },
       { label: '医学管理等の1日当たり点数', value: '+1.8%', source: SRC_SHINRYO },
+      { label: '医学管理等の構成割合', value: '令和3年 14.0% / 令和4年 14.5% / 令和5年 14.8% / 令和6年 14.6%（令和2年はこの区分が上位3つに入らず未取得）', source: SRC_SHINRYO_YEARS['令和3年'] },
     ],
   },
   {
@@ -54,6 +64,7 @@ const FIELDS_DEMAND = [
     body: '歯周治療が含まれる「処置」と、歯周基本検査が含まれる「検査」は、歯科の診療行為の中でも伸びが大きい区分です。高齢になっても歯が残るようになったぶん、その歯を支える組織を診る仕事がふえています。',
     evidence: [
       { label: '処置（歯周治療を含む区分）の1日当たり点数', value: '+9.0%（構成割合 20.9%）', source: SRC_SHINRYO },
+      { label: '構成割合の5年', value: '令和2年 19.9% / 令和3年 20.5% / 令和4年 19.6% / 令和5年 19.9% / 令和6年 20.9%。令和6年がいちばん高い', source: SRC_SHINRYO_YEARS['令和2年'] },
       { label: '検査（歯周基本検査を含む区分）', value: '+7.5%（構成割合 7.9%）', source: SRC_SHINRYO },
       { label: '65〜74歳でう歯を持つ人', value: '76.9%（平成5年）→ 96.6%（令和4年）。歯が残るから増える', source: SRC_SHIKKAN_R4 },
     ],
@@ -98,10 +109,11 @@ const FIELDS_DEMAND = [
   {
     id: '一般',
     direction: 'flat',
-    headline: '総額は横ばい。ただし金属から接着へ中身が変わっている',
-    body: '削って詰める・かぶせる・入れ歯を入れるという仕事は、歯科の点数の約3割を占めていていちばん大きい。ただし前回と比べるとわずかに減っています。歯科の中心ではあるが、伸びしろがある場所ではありません。',
+    headline: '5年で構成割合が5ポイント下がった。中身も金属から接着へ',
+    body: '削って詰める・かぶせる・入れ歯を入れるという仕事は、いまも歯科の点数の約3割を占めていていちばん大きい。ただし歯科全体に占める割合は令和2年の 34.8% から令和6年の 29.9% まで、5年続けて下がっています。歯科の中心ではあるけれど、比重は年々軽くなっている場所です。',
     evidence: [
       { label: '歯冠修復及び欠損補綴の1日当たり点数', value: '−0.3%（構成割合 29.9%・全区分で最大）', source: SRC_SHINRYO },
+      { label: '構成割合の5年（歯科全体に占める割合）', value: '令和2年 34.8% / 令和3年 32.4% / 令和4年 31.9% / 令和5年 31.1% / 令和6年 29.9%。5年で約5ポイント下がった', source: SRC_SHINRYO_YEARS['令和2年'] },
       { label: '初・再診', value: '+2.7%（構成割合 12.3%）', source: SRC_SHINRYO },
       { label: '歯科用金属の生産金額', value: '895億円（−5.9%）。うち歯科鋳造用金銀パラジウム合金は 799億円（−7.4%）', source: SRC_YAKUJI },
       { label: '歯科用接着充填材料の生産金額', value: '517億円（+13.2%）', source: SRC_YAKUJI },

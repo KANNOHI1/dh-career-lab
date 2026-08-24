@@ -21,6 +21,7 @@ const TRACKS = [
       '臨床経験 1〜3 年以上（企業により異なる）',
       '普通自動車免許（モリタ）・PC スキル',
       '土日祝の出勤と国内出張（ナカニシは週末中心に月2〜3回・1泊）',
+      '勤務地が限られる職種がある（ナカニシのセミナー運営職は東京）',
     ],
     blocker: null,
     income: {
@@ -28,8 +29,11 @@ const TRACKS = [
       examples: [
         { org: '松風（企画営業）', value: '年収 425〜676 万円 / 賞与年2回 計5.548ヶ月・2023年度実績 / 年間休日 127 日', source: 'https://shofu-recruit.jp/recruit/' },
         { org: 'Ivoclar Vivadent', value: '年収 500〜650 万円 / 年間休日 120 日以上', source: null },
-        // 2026-08-24 公式採用ページに到達できず（接続不可）。求人媒体の掲載値のまま残す。
-      { org: 'ナカニシ（求人媒体の掲載値）', value: '予定年収 370〜550 万円（年俸制）', source: 'https://doda.jp/DodaFront/View/JobSearchDetail/j_jid__3015504594/' },
+        // 2026-08-24 公式の採用サイトで確認できた（前回はドメインを間違えていた）。
+      // 「歯科医療従事者向けのセミナー運営・サポート」= 歯科衛生士の資格保有者（3年以上）が応募条件。
+      // ただし公式は「年俸制」としか書いておらず、金額は出ていない。金額は求人媒体の値。
+      { org: 'ナカニシ（公式）', value: 'セミナー運営・サポート職。歯科衛生士の資格保有者（3年以上の経験）。勤務地は東京。年俸制・年間休日123日・週休2日（土日）・昇給年1回・賞与年1回', source: 'https://www.nakanishi-inc-recruitment.jp/mid-career/sales/' },
+      { org: 'ナカニシ（金額は求人媒体の掲載値）', value: '予定年収 370〜550 万円', source: 'https://doda.jp/DodaFront/View/JobSearchDetail/j_jid__3015504594/' },
         { org: 'モリタ', value: '月給 244,000〜350,000 円 + 賞与年2回（実績 5.1〜5.4ヶ月）', source: 'https://recruit.morita.com/recruit/mid.php' },
       ],
     },

@@ -895,8 +895,22 @@ function regionSection() {
       '<ul class="plain">' +
       R.years.map((y, i) => '<li>' + y + '年：<strong>' + a.aged65[i] + '%</strong>' +
         '（うち75歳以上 ' + a.aged75[i] + '%）</li>').join('') +
-      '</ul>' +
-      '<p style="margin:.6rem 0 0">' + a.note + '</p>';
+      '</ul>';
+
+    // 人口あたりの数。全国と並べないと多いか少ないか分からない
+    if (a.hygienistsPer100k) {
+      html += '<span class="cap">人口10万人あたり（全国と比べて）</span>' +
+        '<ul class="plain">' +
+        '<li>歯科衛生士 <strong>' + a.hygienistsPer100k + '</strong>（全国 ' + R.nationalDH.per100k + '）</li>' +
+        '<li>歯科診療所 <strong>' + a.clinicsPer100k + '</strong>（全国 ' + R.nationalClinics.per100k + '）</li>' +
+        (a.dentistsPer100k ? '<li>歯科医師 <strong>' + a.dentistsPer100k + '</strong>（全国 ' + R.national.dentistsPer100k + '）</li>' : '') +
+        '<li>新卒の求人倍率 <strong>' + a.newGradJobRatio + ' 倍</strong>（全国 ' + R.newGradJobRatioNational + ' 倍）' +
+        (a.newGradJobRatioNote ? '<span class="cap">※' + a.newGradJobRatioNote + '</span>' : '') + '</li>' +
+        '</ul>' +
+        '<span class="cap">歯科衛生士の数は令和2年、診療所と歯科医師は令和6年の調査です。</span>';
+    }
+
+    html += '<p style="margin:.6rem 0 0">' + a.note + '</p>';
     box.appendChild(card(isMine ? 'card flag' : 'card', html));
   });
 
@@ -1074,7 +1088,8 @@ function trackCard(t, idx) {
   FIELDS_DEMAND.forEach(f => f.evidence.forEach(e => { if (e.source) srcs.add(e.source); }));
   [SUPPLY.clinics.source, SUPPLY.dentists.source, SUPPLY.hygienists.source, SUPPLY.newGrad.source,
    REGION_DATA.newGradSource,
-   REGION_DATA.source, REGION_DATA.national.source].forEach(u => { if (u) srcs.add(u); });
+   REGION_DATA.source, REGION_DATA.national.source,
+   REGION_DATA.nationalDH.source, REGION_DATA.nationalClinics.source].forEach(u => { if (u) srcs.add(u); });
   [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource, MARKET.ageDistributionSourceSecondary,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });
   $('#srccount').textContent = srcs.size;

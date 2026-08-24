@@ -407,6 +407,19 @@ function otherPeopleFacts() {
   return f;
 }
 
+// 折りたたむセクションの箱。見出しだけで開くかどうか決められるよう、要約を1行付ける。
+function foldSection(title, summary, buildNodes) {
+  const d = document.createElement('details');
+  d.className = 'sect';
+  d.innerHTML = '<summary><span class="st">' + title + '</span>' +
+    '<span class="cap">' + summary + '</span></summary>';
+  const body = document.createElement('div');
+  body.className = 'sect-body';
+  buildNodes().forEach(n => { if (n) body.appendChild(n); });
+  d.appendChild(body);
+  return d;
+}
+
 function result() {
   const w = document.createElement('div');
   w.className = 'step active';
@@ -416,11 +429,11 @@ function result() {
 
   const M = MARKET, S = SALARY;
   const facts = otherPeopleFacts();
+  const ranked = rankedTracks();
 
-  // 0. 先に結論を出す。画面が長いので、上から順に読まなくても要点が分かるようにする。
-  const rankedForSummary = rankedTracks();
-  const top = rankedForSummary.filter(t => t.verdict !== 'not-recommended').slice(0, 2);
-  const nope = rankedForSummary.filter(t => t.verdict === 'not-recommended');
+  // ================= 第1段: あなたはいまここ =================
+  const top = ranked.filter(t => t.verdict !== 'not-recommended').slice(0, 2);
+  const nope = ranked.filter(t => t.verdict === 'not-recommended');
   const bits = [];
   if (A.years) bits.push('実務 <strong>' + A.years + ' 年</strong>');
   if ((A.fields || []).length) bits.push('通ってきた領域 <strong>' + A.fields.length + ' つ</strong>');
@@ -432,8 +445,7 @@ function result() {
       h += '<p style="margin:.6rem 0 .2rem"><strong>いま条件が合っているもの</strong></p>' +
         '<ul class="plain">' + top.map(t => '<li>' + t.name + '</li>').join('') + '</ul>';
     }
-    // 教える側に興味がないと答えた人に、教員を「すすめない」と伝えても情報にならない。
-    // カード自体は下に残すので、まとめからだけ外す。
+    // 教える側に興味がないと答えた人に、教員を「すすめない」と伝えても情報にならない
     const careAboutTeaching = A.teachInterest !== 'ない' || A.future === '教える・伝える側にまわる';
     if (nope.length && careAboutTeaching) {
       h += '<p style="margin:.6rem 0 .2rem"><strong>調べた結果、すすめないもの</strong></p>' +
@@ -442,139 +454,20 @@ function result() {
     w.appendChild(card('card flag', h));
   }
 
-  // 0-2. 立ち位置の図。領域を選んでいなければ出さない
   const fmap = fieldMap();
   if (fmap) w.appendChild(fmap);
 
-  // 1. 母数
-  w.appendChild(card('card',
-    '<span class="cap">全国で働いている歯科衛生士</span>' +
-    '<span class="big">' + M.employedHygienists.toLocaleString() + ' 人</span>' +
-    '<span class="cap">このうち ' + pct(M.workplaceBreakdown.clinic.ratio) + ' が診療所勤務。' +
-    '50代以上が ' + pct(M.ageDistribution.fiftiesAndOver) + ' を占めていて、' +
-    M.fiftiesTrend + '。</span>' +
-    '<p class="src">出典: 厚生労働省 令和6年 衛生行政報告例 / ' + M.source + '</p>'));
-
-  // 2. 経験年数
-  if (A.years) {
-    w.appendChild(card('card',
-      '<span class="cap">あなたの実働年数</span>' +
-      '<span class="big">' + A.years + ' 年</span>' +
-      '<span class="cap">歯科衛生士の平均年齢は ' + M.averageAge + ' 歳。40代が ' +
-      pct(M.ageDistribution.forties) + '、50代以上が ' + pct(M.ageDistribution.fiftiesAndOver) +
-      ' を占めます。</span>' +
-      '<p class="src">出典: 令和4年 賃金構造基本統計調査 ほか</p>'));
-  }
-
-  // 3. 領域の深さ（希少性は数値で主張しない）
-  const fy = A.fieldYears || {};
-  const deep = (A.fields || []).filter(f => fy[f] >= 3);
-  if ((A.fields || []).length) {
-    let html = '<span class="cap">通ってきた領域</span>' +
-      '<span class="big">' + A.fields.length + ' 領域</span>' +
-      '<ul class="plain">' +
-      A.fields.map(f => '<li>' + f + (fy[f] ? '（' + fy[f] + '年）' : '') + '</li>').join('') + '</ul>';
-    if (deep.length >= 2) {
-      html += '<span class="cap"><strong>' + deep.join('・') + '</strong> は3年以上。' +
-        'かじった経験ではなく、主戦場として通った領域です。</span>';
-    }
-
-    w.appendChild(card('card', html));
-  }
-
-  // 4. 資格
-  const an = anesthesia();
-  if (an && an.sure) {
-    const c = CERTIFICATIONS.find(x => x.id === an.id);
-    let html = '<span class="tag">保有資格</span>' +
-      '<span class="cap">' + c.name + '<br>' + c.issuer + '</span>';
-    // 希少性の根拠として使える資格かどうかで、書き方をはっきり分ける。
-    // 数字が実態と食い違うと、読んだ本人が一番先に気づく。
-    if (c.usableAsRarity && c.holderRatio) {
-      html += '<span class="big">全国 ' + c.holders.toLocaleString() + ' 名</span>' +
-        '<span class="cap">働いている歯科衛生士 ' + M.employedHygienists.toLocaleString() +
-        ' 人に対して <strong>' + pct(c.holderRatio) + '</strong>。およそ ' +
-        Math.round(1 / c.holderRatio).toLocaleString() + ' 人に 1 人です。</span>';
-    } else {
-      html += '<span class="cap">実際に麻酔を任せる体制のある医院で働いていて、' +
-        'それを日常的に使っている。<strong>制度としてできることと、' +
-        '現場で任されることは別です。</strong></span>';
-    }
-    html += '<p class="src">出典: ' + c.source +
-      (c.realitySource ? '<br>実態: ' + c.realitySource : '') + '</p>';
-    w.appendChild(card('card', html));
-  } else if (an) {
-    const a = CERTIFICATIONS.find(x => x.id === 'anesthesia-jdsa');
-    const b = CERTIFICATIONS.find(x => x.id === 'anesthesia-jda');
-    w.appendChild(card('unknown',
-      '<strong>麻酔の認定は、どちらの制度か特定できませんでした。</strong><br>' +
-      '同じ「認定麻酔衛生士」と呼ばれる資格が2つあり、保有者数が大きく違います。<br><br>' +
-      '・' + a.issuer + '：<strong>' + a.holders + ' 名</strong>（' + pct(a.holderRatio) + '）<br>' +
-      '・' + b.issuer + '：累計 ' + b.holders.toLocaleString() + ' 名（歯科医師を含む）<br><br>' +
-      'お手元の認定証に書かれている発行元を見ると分かります。' +
-      '前者は症例報告と口頭試問がある学会認定で、後者は1日の講習で取れる民間認定です。' +
-      '同じ名前でも中身が違います。'));
-  }
-
-  if ((A.certs || []).length) {
-    w.appendChild(card('unknown',
-      CERTIFICATION_CAVEAT.implication +
-      '<p class="src">出典: ' + CERTIFICATION_CAVEAT.source + '</p>'));
-  }
-
-  // 5. 他者からの扱い
-  if (facts.length) {
+  // いちばん上の選択肢の「最初の一歩」を1つだけ、ここで見せる
+  const firstTop = top[0];
+  if (firstTop && firstTop.firstStep) {
     w.appendChild(card('card flag',
-      '<span class="tag">まわりからの扱い</span>' +
-      '<span class="big">' + facts.length + ' 件</span>' +
-      '<span class="cap">これはあなたの自己評価ではなく、<strong>他の人があなたをどう扱ったか</strong>の記録です。</span>' +
-      '<ul class="plain">' + facts.map(f => '<li>' + f + '</li>').join('') + '</ul>' +
-      '<span class="cap">資格や年数は「持っている」ことしか示しません。' +
-      'この欄は「まわりが実際に頼った」という、別の種類の事実です。</span>'));
+      '<span class="tag">今日できること</span>' +
+      '<span class="tname">' + firstTop.name + '</span>' +
+      '<p style="margin:.5rem 0 0">' + firstTop.firstStep + '</p>' +
+      '<span class="cap">ほかの選択肢とその根拠は、この下に出しています。</span>'));
   }
 
-  // 6. 左利き
-  if (A.handedness === '左') {
-    w.appendChild(card('card flag',
-      '<span class="tag">左利き</span>' +
-      '<span class="big">推定 ' + M.leftHandedHygienistsEstimate.toLocaleString() + ' 人</span>' +
-      '<span class="cap">一般人口の左利き率（約 ' + pct(M.leftHandedRateGeneral) + '）から推定した、' +
-      '全国の左利き歯科衛生士のおおよその人数です。歯科職に限定した統計は存在しません。</span>' +
-      '<p style="margin:.8rem 0 0"><strong>教育現場にはこういう状態があります。</strong><br>' +
-      '「' + M.leftHandedEducationGap + '」<br>' +
-      '左利き向けのポジショニングやスケーラー操作を体系化した日本語の教材は、ほぼ見当たりません。</p>' +
-      '<span class="cap">あなたが不利だと感じてきたことは、' +
-      '<strong>教えられる人がいない領域を自分で解決してきた</strong>ということでもあります。</span>' +
-      '<p class="src">出典: ' + M.leftHandedSource + '</p>'));
-  }
-
-  // 7. 年収
-  if (A.income && A.income !== '答えたくない') {
-    // 年代を答えてもらえていれば、その階級を出す。なければ全年齢のピークを出す
-    const me = A.ageBand ? AGE_BANDS.find(b => b.label === A.ageBand) : null;
-    const mine = me && me.band ? S.byAgeBand.find(b => b.band === me.band) : null;
-    const peak = S.byAgeBand.reduce((a, b) => (b.annualYen > a.annualYen ? b : a));
-    w.appendChild(card('card',
-      '<span class="cap">年収の全国データ（常勤）</span>' +
-      '<span class="big">' + (mine ? mine.band + '歳 ' + man(mine.annualYen)
-                                   : peak.band + '歳 ' + man(peak.annualYen)) + '</span>' +
-      '<span class="cap">' +
-      (mine ? 'あなたと同じ年代の平均です。' +
-              (mine.band === peak.band ? 'ここが全年齢でいちばん高い階級です。'
-                                       : '全年齢でいちばん高いのは ' + peak.band + '歳の ' + man(peak.annualYen) + '。')
-            : '全年齢でいちばん高い階級です。') +
-      '全体平均は ' + man(S.national.annualYen) + '。あなたの回答は「' + A.income + '」でした。</span>' +
-      '<p class="src">' + S.curveCaveat + '<br>出典: ' + S.sourceName + ' / ' + S.source + '</p>'));
-  }
-
-  // 8. 分野ごとの動き（市場の側から見た材料）
-  w.appendChild(fieldSection());
-
-  // 9. 働く場所の数と地域差
-  w.appendChild(supplySection());
-  w.appendChild(regionSection());
-
-  // 10. この先の選択肢
+  // ================= 第2段: この先の選択肢 =================
   const h = document.createElement('h3');
   h.textContent = 'この先の選択肢';
   w.appendChild(h);
@@ -585,13 +478,15 @@ function result() {
     ((A.priority || []).length ? '<strong>' + A.priority.join('・') + '</strong>' : 'もの') +
     ' と照らして並べています。';
   w.appendChild(lead);
-  // 「いまの仕事を続けたまま深める」と「外に出る」を分けて出す。
+
+  // 「いまの仕事を続けたまま深める」と「外に出る」を分ける。
   // 混ぜると、転職しない選択肢が見えなくなる。
-  const ranked = rankedTracks();
+  // 各群で上位2つだけ出し、残りは「ほかを見る」の中へ入れる。
   const groups = [
     { key: 'clinical', title: '臨床を続けたまま深める', note: '職場を変えずに進める道です。' },
     { key: 'outside', title: '臨床の外に出る', note: '働く場所そのものを変える道です。' },
   ];
+  const SHOW_PER_GROUP = 2;
   groups.forEach(g => {
     const list = ranked.filter(t => (t.group || 'outside') === g.key);
     if (!list.length) return;
@@ -599,10 +494,150 @@ function result() {
     gh.className = 'grouphead';
     gh.innerHTML = '<strong>' + g.title + '</strong>　<span class="cap">' + g.note + '</span>';
     w.appendChild(gh);
-    list.forEach((t, i) => w.appendChild(trackCard(t, i)));
+    list.slice(0, SHOW_PER_GROUP).forEach((t, i) => w.appendChild(trackCard(t, i)));
+    const rest = list.slice(SHOW_PER_GROUP);
+    if (rest.length) {
+      w.appendChild(foldSection(
+        'ほかの' + rest.length + 'つを見る',
+        rest.map(t => t.short || t.name).join('・'),
+        () => rest.map((t, i) => trackCard(t, i + SHOW_PER_GROUP))));
+    }
   });
 
-  // 11. 書いてくれた工夫
+  // ================= 第3段: 数字の裏側 =================
+  const h2 = document.createElement('h3');
+  h2.textContent = '数字の裏側';
+  w.appendChild(h2);
+  const lead2 = document.createElement('p');
+  lead2.className = 'hint';
+  lead2.textContent = 'ここから下は、上の判断のもとにした統計です。気になるところだけ開いてください。';
+  w.appendChild(lead2);
+
+  w.appendChild(foldSection('あなたの棚卸し', '年数・領域・資格・まわりからの扱い', () => {
+    const out = [];
+
+    out.push(card('card',
+      '<span class="cap">全国で働いている歯科衛生士</span>' +
+      '<span class="big">' + M.employedHygienists.toLocaleString() + ' 人</span>' +
+      '<span class="cap">このうち ' + pct(M.workplaceBreakdown.clinic.ratio) + ' が診療所勤務。' +
+      '50代以上が ' + pct(M.ageDistribution.fiftiesAndOver) + ' を占めていて、' +
+      M.fiftiesTrend + '。</span>' +
+      '<p class="src">出典: 厚生労働省 令和6年 衛生行政報告例 / ' + M.source + '</p>'));
+
+    if (A.years) {
+      out.push(card('card',
+        '<span class="cap">あなたの実働年数</span>' +
+        '<span class="big">' + A.years + ' 年</span>' +
+        '<span class="cap">歯科衛生士の平均年齢は ' + M.averageAge + ' 歳。40代が ' +
+        pct(M.ageDistribution.forties) + '、50代以上が ' + pct(M.ageDistribution.fiftiesAndOver) +
+        ' を占めます。</span>' +
+        '<p class="src">出典: 令和4年 賃金構造基本統計調査 ほか</p>'));
+    }
+
+    const fy = A.fieldYears || {};
+    const deep = (A.fields || []).filter(f => fy[f] >= 3);
+    if ((A.fields || []).length) {
+      let html = '<span class="cap">通ってきた領域</span>' +
+        '<span class="big">' + A.fields.length + ' 領域</span>' +
+        '<ul class="plain">' +
+        A.fields.map(f => '<li>' + f + (fy[f] ? '（' + fy[f] + '年）' : '') + '</li>').join('') + '</ul>';
+      if (deep.length >= 2) {
+        html += '<span class="cap"><strong>' + deep.join('・') + '</strong> は3年以上。' +
+          'かじった経験ではなく、主戦場として通った領域です。</span>';
+      }
+      out.push(card('card', html));
+    }
+
+    const an = anesthesia();
+    if (an && an.sure) {
+      const c = CERTIFICATIONS.find(x => x.id === an.id);
+      let html = '<span class="tag">保有資格</span>' +
+        '<span class="cap">' + c.name + '<br>' + c.issuer + '</span>';
+      if (c.usableAsRarity && c.holderRatio) {
+        html += '<span class="big">全国 ' + c.holders.toLocaleString() + ' 名</span>' +
+          '<span class="cap">働いている歯科衛生士 ' + M.employedHygienists.toLocaleString() +
+          ' 人に対して <strong>' + pct(c.holderRatio) + '</strong>。およそ ' +
+          Math.round(1 / c.holderRatio).toLocaleString() + ' 人に 1 人です。</span>';
+      } else {
+        html += '<span class="cap">実際に麻酔を任せる体制のある医院で働いていて、' +
+          'それを日常的に使っている。<strong>制度としてできることと、' +
+          '現場で任されることは別です。</strong></span>';
+      }
+      html += '<p class="src">出典: ' + c.source +
+        (c.realitySource ? '<br>実態: ' + c.realitySource : '') + '</p>';
+      out.push(card('card', html));
+    } else if (an) {
+      const a = CERTIFICATIONS.find(x => x.id === 'anesthesia-jdsa');
+      const b = CERTIFICATIONS.find(x => x.id === 'anesthesia-jda');
+      out.push(card('unknown',
+        '<strong>麻酔の認定は、どちらの制度か特定できませんでした。</strong><br>' +
+        '同じ「認定麻酔衛生士」と呼ばれる資格が2つあり、保有者数が大きく違います。<br><br>' +
+        '・' + a.issuer + '：<strong>' + a.holders + ' 名</strong>（' + pct(a.holderRatio) + '）<br>' +
+        '・' + b.issuer + '：累計 ' + b.holders.toLocaleString() + ' 名（歯科医師を含む）<br><br>' +
+        'お手元の認定証に書かれている発行元を見ると分かります。' +
+        '前者は症例報告と口頭試問がある学会認定で、後者は1日の講習で取れる民間認定です。' +
+        '同じ名前でも中身が違います。'));
+    }
+
+    if ((A.certs || []).length) {
+      out.push(card('unknown',
+        CERTIFICATION_CAVEAT.implication +
+        '<p class="src">出典: ' + CERTIFICATION_CAVEAT.source + '</p>'));
+    }
+
+    if (facts.length) {
+      out.push(card('card flag',
+        '<span class="tag">まわりからの扱い</span>' +
+        '<span class="big">' + facts.length + ' 件</span>' +
+        '<span class="cap">これはあなたの自己評価ではなく、<strong>他の人があなたをどう扱ったか</strong>の記録です。</span>' +
+        '<ul class="plain">' + facts.map(f => '<li>' + f + '</li>').join('') + '</ul>' +
+        '<span class="cap">資格や年数は「持っている」ことしか示しません。' +
+        'この欄は「まわりが実際に頼った」という、別の種類の事実です。</span>'));
+    }
+
+    if (A.handedness === '左') {
+      out.push(card('card flag',
+        '<span class="tag">左利き</span>' +
+        '<span class="big">推定 ' + M.leftHandedHygienistsEstimate.toLocaleString() + ' 人</span>' +
+        '<span class="cap">一般人口の左利き率（約 ' + pct(M.leftHandedRateGeneral) + '）から推定した、' +
+        '全国の左利き歯科衛生士のおおよその人数です。歯科職に限定した統計は存在しません。</span>' +
+        '<p style="margin:.8rem 0 0"><strong>教育現場にはこういう状態があります。</strong><br>' +
+        '「' + M.leftHandedEducationGap + '」<br>' +
+        '左利き向けのポジショニングやスケーラー操作を体系化した日本語の教材は、ほぼ見当たりません。</p>' +
+        '<span class="cap">あなたが不利だと感じてきたことは、' +
+        '<strong>教えられる人がいない領域を自分で解決してきた</strong>ということでもあります。</span>' +
+        '<p class="src">出典: ' + M.leftHandedSource + '</p>'));
+    }
+
+    if (A.income && A.income !== '答えたくない') {
+      const me = A.ageBand ? AGE_BANDS.find(b => b.label === A.ageBand) : null;
+      const mine = me && me.band ? S.byAgeBand.find(b => b.band === me.band) : null;
+      const peak = S.byAgeBand.reduce((a, b) => (b.annualYen > a.annualYen ? b : a));
+      out.push(card('card',
+        '<span class="cap">年収の全国データ（常勤）</span>' +
+        '<span class="big">' + (mine ? mine.band + '歳 ' + man(mine.annualYen)
+                                     : peak.band + '歳 ' + man(peak.annualYen)) + '</span>' +
+        '<span class="cap">' +
+        (mine ? 'あなたと同じ年代の平均です。' +
+                (mine.band === peak.band ? 'ここが全年齢でいちばん高い階級です。'
+                                         : '全年齢でいちばん高いのは ' + peak.band + '歳の ' + man(peak.annualYen) + '。')
+              : '全年齢でいちばん高い階級です。') +
+        '全体平均は ' + man(S.national.annualYen) + '。あなたの回答は「' + A.income + '」でした。</span>' +
+        '<p class="src">' + S.curveCaveat + '<br>出典: ' + S.sourceName + ' / ' + S.source + '</p>'));
+    }
+    return out;
+  }));
+
+  w.appendChild(foldSection('分野ごとの動き',
+    '9つの診療領域が伸びているか縮んでいるか', () => [fieldSection()]));
+
+  w.appendChild(foldSection('働く場所の数',
+    '診療所と歯科医師は減り、歯科衛生士は増えている', () => [supplySection()]));
+
+  w.appendChild(foldSection('地域による差',
+    '北海道と東京で、高齢化も給与も違う', () => [regionSection()]));
+
+  // ================= 自由記述 =================
   const notes = [
     ['左利きでの工夫', A.leftHand],
     ['ブランクからの戻り方', A.comeback],
@@ -1110,10 +1145,10 @@ function trackCard(t, idx) {
   addSrc(t.source);
   html += '<p class="src">出典: ' + srcs.join('<br>') + '</p>';
 
-  // 全部を開いたままにすると縦に長くなりすぎて読まれない。上位2件だけ開く。
+  // 全部を開いたままにすると縦に長くなりすぎて読まれない。各群の先頭だけ開く。
   const d = document.createElement('details');
   d.className = 'card' + (t.verdict === 'not-recommended' ? '' : ' flag');
-  d.open = idx < 2;
+  d.open = idx < 1;
   d.innerHTML = '<summary>' + head + '</summary>' + html;
   return d;
 }

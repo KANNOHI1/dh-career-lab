@@ -185,6 +185,29 @@ details.card[open] > summary { border-bottom: 1px solid var(--line); padding-bot
 }
 .maplegend .n.down { background: var(--warn); }
 
+/* 大きなセクションの折りたたみ。カードの details とは別の見た目にする */
+details.sect {
+  border: 1px solid var(--line); border-radius: .6rem;
+  background: var(--card); margin: 0 0 .8rem;
+}
+details.sect > summary {
+  list-style: none; cursor: pointer; padding: .9rem 1rem;
+  display: block; position: relative;
+}
+details.sect > summary::-webkit-details-marker { display: none; }
+details.sect > summary .st {
+  display: block; font-weight: 700; font-size: .95rem; color: var(--fg);
+}
+details.sect > summary .cap { display: block; margin: .2rem 0 0; }
+details.sect > summary::after {
+  content: 'ひらく ＋'; display: block; margin: .5rem 0 0;
+  font-size: .78rem; color: var(--accent); font-weight: 600;
+}
+details.sect[open] > summary::after { content: 'とじる −'; color: var(--muted); }
+details.sect[open] > summary { border-bottom: 1px solid var(--line); }
+.sect-body { padding: 1rem 1rem 0; }
+.sect-body > h3:first-child { margin-top: 0; }
+
 .grouphead { margin: 1.6rem 0 .6rem; font-size: .9rem; }
 .grouphead strong { color: var(--accent); }
 
@@ -274,13 +297,13 @@ footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top:
 
 <!-- キャッシュ対策: スマホのブラウザが古い JS を保持するため、
      data/*.js か app.js を変更したら下の ?v= を必ず更新する -->
-<script src="data/market.js?v=20260824w"></script>
-<script src="data/certifications.js?v=20260824w"></script>
-<script src="data/salary.js?v=20260824w"></script>
-<script src="data/fields.js?v=20260824w"></script>
-<script src="data/supply.js?v=20260824w"></script>
-<script src="data/regions.js?v=20260824w"></script>
-<script src="data/tracks.js?v=20260824w"></script>
-<script src="app.js?v=20260824w"></script>
+<script src="data/market.js?v=20260824x"></script>
+<script src="data/certifications.js?v=20260824x"></script>
+<script src="data/salary.js?v=20260824x"></script>
+<script src="data/fields.js?v=20260824x"></script>
+<script src="data/supply.js?v=20260824x"></script>
+<script src="data/regions.js?v=20260824x"></script>
+<script src="data/tracks.js?v=20260824x"></script>
+<script src="app.js?v=20260824x"></script>
 </body>
 </html>

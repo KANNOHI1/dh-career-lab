@@ -148,6 +148,10 @@ function revealOnScroll() {
   // ここまで来た＝JS が動いている。隠してよい
   document.documentElement.classList.add('js');
 
+  // 隠した直後に .shown を付けると、隠れた状態が確定する前なので transition が走らず
+  // opacity 0 のまま止まる（本文が読めなくなる）。ここで一度レイアウトを確定させる。
+  void document.body.offsetHeight;
+
   // IntersectionObserver は、勢いよくスクロールして通り過ぎた要素を取りこぼすことがある。
   // 隠れたまま残ると本文が読めないので、位置を直接見る。要素は数個なので負荷にならない。
   const check = () => {

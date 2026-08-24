@@ -77,12 +77,22 @@ button.linkbtn {
 }
 #resume-box { margin: 2rem 0 0; padding: 1rem 0 0; border-top: 1px dashed var(--line); }
 
-/* スクロールで現れる。隠すのは JS が動いているときだけ。
-   JS が失敗しても本文が読めなくなってはいけない */
-.js [data-r] { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .5s ease; }
-.js [data-r].shown { opacity: 1; transform: none; }
+/* スクロールで現れる。隠すのは JS が動いているときだけで、
+   JS が動かなければ最初から全部見える。
+   可読性を演出に依存させない。opacity は .shown で静的に決め、
+   動かすのは transform だけにする。アニメーションが走らなくても・
+   開始が遅れても、.shown が付いた時点で本文は読める。
+   （opacity を keyframe に入れていたとき、アニメーション開始が遅れる環境で
+     セクションが空白のまま残った） */
+.js [data-r] { opacity: 0; }
+.js [data-r].shown { opacity: 1; animation: rise .45s ease; }
+@keyframes rise {
+  from { transform: translateY(14px); }
+  to { transform: none; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .js [data-r] { opacity: 1; transform: none; transition: none; }
+  .js [data-r] { opacity: 1; }
+  .js [data-r].shown { animation: none; }
   .scroll-hint .arrow { animation: none; }
 }
 
@@ -241,10 +251,10 @@ footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top:
 
 <!-- キャッシュ対策: スマホのブラウザが古い JS を保持するため、
      data/*.js か app.js を変更したら下の ?v= を必ず更新する -->
-<script src="data/market.js?v=20260824e"></script>
-<script src="data/certifications.js?v=20260824e"></script>
-<script src="data/salary.js?v=20260824e"></script>
-<script src="data/tracks.js?v=20260824e"></script>
-<script src="app.js?v=20260824e"></script>
+<script src="data/market.js?v=20260824i"></script>
+<script src="data/certifications.js?v=20260824i"></script>
+<script src="data/salary.js?v=20260824i"></script>
+<script src="data/tracks.js?v=20260824i"></script>
+<script src="app.js?v=20260824i"></script>
 </body>
 </html>

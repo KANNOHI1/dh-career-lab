@@ -14,3 +14,4 @@ data/*
 !data/certifications.js
 !data/salary.js
 !data/tracks.js
+!data/fields.js

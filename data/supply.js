@@ -11,6 +11,10 @@
 const SRC_SHISETSU = 'https://www.mhlw.go.jp/toukei/saikin/hw/iryosd/24/dl/02sisetu06.pdf';
 const SRC_SHIKAISHI = 'https://www.mhlw.go.jp/toukei/saikin/hw/ishi/24/dl/R06_1gaikyo.pdf';
 const SRC_DH = 'https://www.jdha.or.jp/aboutdh/shugyo.html';
+//   一般社団法人 全国歯科衛生士教育協議会「歯科衛生士教育に関する現状調査」（令和8年6月）
+//   加盟185校・回収率100%。第1弾で「求人倍率23.3倍は一専門学校の調査」として棄却したが、
+//   協議会の全国調査で 23.1 倍と裏づけが取れたので採用する。
+const SRC_KYOGIKAI = 'https://www.kokuhoken.or.jp/zen-eiky/publicity/file/report_2026.pdf';
 
 const SUPPLY = {
   // --- 歯科診療所（令和6年10月1日現在・活動中の施設）---
@@ -62,6 +66,26 @@ const SUPPLY = {
     note: '就業歯科衛生士数 ÷ 歯科診療所数。どちらも公表値だが、この割り算自体は当サイトの計算',
   },
 
+  // --- 新人の求人倍率（養成校の卒業生ベース）---
+  newGrad: {
+    graduates: 7249,
+    employed: 6616,
+    employmentRate: 0.913,
+    jobOpenings: 152550,          // 求人人数
+    jobPostings: 83850,           // 求人件数
+    ratioPerEmployed: 23.1,       // 就職者に対する求人人数倍率
+    ratioPerGraduate: 21.0,
+    trend: [
+      { label: '平成31年度', v: 20.7 }, { label: '令和2年度', v: 19.4 },
+      { label: '令和3年度', v: 22.6 }, { label: '令和4年度', v: 23.3 },
+      { label: '令和5年度', v: 21.8 }, { label: '令和6年度', v: 23.7 },
+      { label: '令和7年度', v: 23.1 },
+    ],
+    note: '養成校を出た人 1 人に対して求人が 23.1 人分ある、という意味です。' +
+          '新卒の話であって、経験者の転職市場の数字ではありません。',
+    source: SRC_KYOGIKAI,
+  },
+
   // 画面に出す読み取り。事実の範囲を超えない書き方にする
   readings: [
     {
@@ -73,6 +97,11 @@ const SUPPLY = {
       title: '診療所の歯科医師は3人に1人以上が60歳をこえている',
       body: '診療所に勤める歯科医師の平均年齢は 55.2歳。昭和57年の 47.3歳から上がり続けています。' +
             '60歳以上が 36.8%、29歳以下は 5.9%。これから引退していく人のほうが多い構成です。',
+    },
+    {
+      title: '働き口そのものは多い',
+      body: '養成校の卒業生でみると、就職者 1 人あたり 23.1 人分の求人があります（令和7年度）。' +
+            '就職率は 91.3%。施設の数は減っていますが、人が足りていない状態は続いています。',
     },
     {
       title: '個人の医院が減り、法人が増えている',

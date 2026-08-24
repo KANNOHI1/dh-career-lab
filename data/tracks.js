@@ -9,6 +9,8 @@
 const TRACKS = [
   {
     id: 'corporate',
+    group: 'outside',
+    field: null,
     firstStep: '松風・ナカニシ・モリタ・Ivoclar Vivadent の採用ページを開く。歯科衛生士資格を要件にした職種があることは確認済み。募集が出ているかは時期による。',
     name: '企業内歯科衛生士（メーカー・材料商社）',
     short: '企業内',
@@ -26,7 +28,8 @@ const TRACKS = [
       examples: [
         { org: '松風（企画営業）', value: '年収 425〜676 万円 / 賞与年2回 計5.548ヶ月・2023年度実績 / 年間休日 127 日', source: 'https://shofu-recruit.jp/recruit/' },
         { org: 'Ivoclar Vivadent', value: '年収 500〜650 万円 / 年間休日 120 日以上', source: null },
-        { org: 'ナカニシ', value: '予定年収 370〜550 万円（年俸制）', source: 'https://doda.jp/DodaFront/View/JobSearchDetail/j_jid__3015504594/' },
+        // 2026-08-24 公式採用ページに到達できず（接続不可）。求人媒体の掲載値のまま残す。
+      { org: 'ナカニシ（求人媒体の掲載値）', value: '予定年収 370〜550 万円（年俸制）', source: 'https://doda.jp/DodaFront/View/JobSearchDetail/j_jid__3015504594/' },
         { org: 'モリタ', value: '月給 244,000〜350,000 円 + 賞与年2回（実績 5.1〜5.4ヶ月）', source: 'https://recruit.morita.com/recruit/mid.php' },
       ],
     },
@@ -43,6 +46,8 @@ const TRACKS = [
 
   {
     id: 'public-health',
+    group: 'outside',
+    field: null,
     firstStep: '通える範囲の自治体の採用情報を見て、歯科衛生士枠の募集時期と年齢の上限を控えておく。枠が毎年出るとは限らないので、出たときに動けるようにしておく。',
     name: '行政・公衆衛生（自治体職員）',
     short: '行政',
@@ -57,7 +62,9 @@ const TRACKS = [
     income: {
       text: '例: 新発田市 31〜40歳の平均 492 万円',
       examples: [
-        { org: '新発田市', value: '30歳まで 391 万円 / 31〜40歳 492 万円。年齢制限なし（42歳の応募例あり）', source: 'https://public-connect.jp/job/15728' },
+        // 2026-08-24 自治体の給与公表（総務省 地方公務員給与実態調査 等）での裏取りは未実施。
+      // 求人サイトの掲載値であることを画面にも出す。
+      { org: '新発田市（求人サイトの掲載値）', value: '30歳まで 391 万円 / 31〜40歳 492 万円。年齢制限なし（42歳の応募例あり）', source: 'https://public-connect.jp/job/15728' },
         { org: '佐倉市', value: '経験者採用は保育士・歯科衛生士のみ 55 歳まで受験可（令和7年度末時点）', source: 'https://www.city.sakura.lg.jp/soshiki/jinjika/boshujoho/backnumber/20777.html' },
         { org: '東京特別区', value: 'I類 22〜31歳 / 経験者採用は最大 59 歳以下', source: 'https://www.union.tokyo23city.lg.jp/jinji/jinjiiinkaitop/saiyoshiken/gaiyo.html' },
       ],
@@ -75,6 +82,8 @@ const TRACKS = [
 
   {
     id: 'home-visit',
+    group: 'clinical',
+    field: '訪問',
     firstStep: '訪問診療をしている医院・法人の求人を見る。運転できるかどうかで条件が変わる。',
     name: '訪問歯科診療',
     short: '訪問',
@@ -108,6 +117,8 @@ const TRACKS = [
 
   {
     id: 'instructor',
+    group: 'outside',
+    field: null,
     firstStep: 'いま通っている領域の学会をひとつ選んで、認定歯科衛生士の要件を調べる。実務3年以上を要件にしているものが多い。',
     name: '指導する側に回る（学会認定 + 発表・執筆）',
     short: '指導',
@@ -141,12 +152,16 @@ const TRACKS = [
 
   {
     id: 'care-manager',
+    group: 'outside',
+    field: null,
     firstStep: '介護支援専門員実務研修受講試験の受験資格を、自分の従事日数で確認する（通算5年以上かつ900日以上）。',
     name: 'ケアマネジャー（介護支援専門員）',
     short: 'ケアマネ',
     summary: '介護保険のケアプランを立てる仕事。訪問・高齢者の領域から地続きで広がる。',
     verdict: 'conditional',
-    reality: '歯科衛生士は受験できる職種に入る。実務 5 年以上かつ従事日数 900 日以上。合格率は年度で振れていて、令和7年度は 25.6%。',
+    reality: '歯科衛生士は受験できる職種に入る。実務 5 年以上かつ従事日数 900 日以上。' +
+             '第28回（令和7年度）は 50,601 人が受けて 12,961 人が合格、合格率 25.6%。' +
+             '平成30年度に受験資格が厳しくなり、受験者は 13 万人台から 4.9 万人へ一気に減りました。',
     entryRequirements: [
       '対人援助業務の実務 通算 5 年以上 かつ 従事日数 900 日以上',
       '介護支援専門員実務研修受講試験に合格',
@@ -156,17 +171,22 @@ const TRACKS = [
     blocker: null,
     income: null,
     incomeNote: '歯科衛生士がこの資格を取った後の年収データは見つかっていない。',
-    tradeoffs: ['歯科の手技からは離れる', '合格率は令和6年度 32.1% → 令和7年度 25.6% と下がっている'],
+    tradeoffs: ['歯科の手技からは離れる', '合格率は 25.6%（第28回・令和7年度）', '平成30年度に受験資格が厳格化され、受験者数が3分の1になった'],
     fitFor: ['安定'],
     cautions: {},
     requiredCertificationIds: [],
-    source: 'https://www.miraicare.jp/column/care-manager-eligibility/',
+    // 2026-08-24 合格率の出典を記事から厚生労働省の実施状況へ差し替え
+    source: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000187425_00013.html',
+    sourceRequirements: 'https://www.miraicare.jp/column/care-manager-eligibility/',
+    sourceRequirementsNote: '受験資格の条文そのものは介護保険法施行規則。厚労省サイト上で要件を一枚にまとめたページを見つけられず、記事を出典のまま残している',
     fetchedAt: '2026-08-23',
     confirmed: true,
   },
 
   {
     id: 'education',
+    group: 'outside',
+    field: null,
     firstStep: '個人で始められる一歩はない。講習会の申込は教育施設が出す。',
     name: '歯科衛生士学校の専任教員',
     short: '養成校教員',
@@ -188,15 +208,28 @@ const TRACKS = [
       ],
     },
     // 学校そのものが縮んでいる
+    // 2026-08-24 出典を同窓会報から協議会の一次調査へ差し替え、最新（令和8年度）に更新。
+    // 全国歯科衛生士教育協議会「歯科衛生士教育に関する現状調査」加盟185校・回収率100%。
     marketShrink: {
       years: [
-        { year: 2020, capacity: 9326, entrants: 8012, underfilledRatio: 0.458 },
-        { year: 2022, capacity: 9609, entrants: 8547, underfilledRatio: 0.543 },
-        { year: 2024, capacity: 10069, entrants: 8007, underfilledRatio: 0.730 },
+        { year: 2021, label: '令和3年度', fillRate: 0.912, underfilledRatio: 0.483 },
+        { year: 2023, label: '令和5年度', fillRate: 0.848, underfilledRatio: 0.680 },
+        { year: 2024, label: '令和6年度', fillRate: 0.795, underfilledRatio: 0.731 },
+        { year: 2025, label: '令和7年度', fillRate: 0.843, underfilledRatio: 0.643 },
+        { year: 2026, label: '令和8年度', fillRate: 0.799, underfilledRatio: 0.745 },
       ],
-      note: '定員を約 700 人増やしたのに、入学者は 2020 年を下回った。2024 年度は 134 校が定員割れ。',
-      source: 'https://tdc-alumni.jp/2024/10/31/dosokai/honbu/kantougen/2024_10/',
-      capacitySource: 'https://www.kokuhoken.or.jp/zen-eiky/publicity/file/report_2020.pdf',
+      latest: { capacity: 9856, entrants: 7876, delta: -537, applicantRatio: 0.95 },
+      note: '令和8年度は入学定員 9,856 名に対して入学者 7,876 名。前年より 537 名減りました。' +
+            '定員に満たない養成校は 74.5% で、調査が始まって以来いちばん高い割合です。' +
+            '志願者は定員の 0.95 倍で、1 倍を割っています。',
+      teachers: {
+        total: 1326, hygienists: 1050, dentists: 168, others: 108,
+        certifiedRatio: 0.346, certifiedCount: 363,
+        studentsPerHygienistTeacher: 22.5,
+        note: '専任教員 1,326 名のうち歯科衛生士は 1,050 名。そのうち専任教員認定歯科衛生士は 363 名（34.6%）。',
+      },
+      source: 'https://www.kokuhoken.or.jp/zen-eiky/publicity/file/report_2026.pdf',
+      capacitySource: 'https://www.kokuhoken.or.jp/zen-eiky/publicity/file/report_2026.pdf',
       closures: ['池見札幌（2020 閉校）', '東京都歯科医師会附属（2021 募集停止）', '日本大学松戸歯学部附属（2025-03 閉校）', '長崎歯科衛生士専門学校（2025年度 募集停止）'],
     },
     tradeoffs: ['臨床の最前線から離れる', '学校の数そのものが減っている', '収入が上がる保証がない（全国平均とほぼ同水準）'],
@@ -208,33 +241,160 @@ const TRACKS = [
     confirmed: true,
   },
 
-  // ---- 以下は公表データが存在しないトラック。画面には出さない ----
-  // 診療領域別（矯正・インプラント・一般・口腔外科）の従事者数・年収・移行要件は
-  // 3 回の調査すべてで「公的統計に存在しない」と確認済み。フリーランスも出典のある
-  // 年収データが取れていない（求人媒体の記載はすべて出典なし）。
-  // 推測で埋めない。
+  // ---- 臨床の中で専門を深める道 ----
+  // 分野（data/fields.js）と field で対応させる。市場の動きとセットで読ませるため。
+  // 認定を取っても収入がどう変わるかを示す公的データは存在しない。そこは正直に書く。
   {
-    id: 'clinic-general', name: '一般歯科クリニック（臨床）', summary: null,
-    entryRequirements: [], requiredCertificationIds: [], income: null,
-    fitFor: [], tradeoffs: [], source: null, fetchedAt: null, confirmed: false,
+    id: 'clinic-perio',
+    name: '歯周治療を専門にする',
+    short: '歯周',
+    group: 'clinical',
+    field: '歯周治療',
+    summary: 'いまの職場を離れずに、歯周病の診断・治療・メインテナンスを深める。',
+    verdict: 'recommend',
+    reality: '歯科衛生士の本業がそのまま伸びている領域です。学会の認定は平成17年からあり、令和6年8月までに 1,431 名。就業している歯科衛生士の 1% 弱にあたります。',
+    entryRequirements: [
+      '日本歯周病学会の会員になる（正会員・準会員どちらでも可）',
+      '症例をそろえて提出する（様式1〜8・全顎エックス線写真）',
+      '書類審査のあとケースプレゼンテーション試験',
+      '登録料 22,000円。申請は年2回（6月・10〜11月）',
+    ],
+    blocker: null,
+    income: null,
+    incomeNote: 'この認定を取ると収入がいくら上がるか、という公的なデータはありません。資格手当の有無は医院ごとに決まります。',
+    tradeoffs: ['症例をそろえるのに年単位かかる', '5年ごとの更新が要る', '学会の年会費がかかる'],
+    fitFor: ['専門性'],
+    cautions: {
+      '転居できない': 'いまの職場のまま進められます。学会の試験と学術大会への参加で移動は必要です。',
+    },
+    requiredCertificationIds: ['perio-jsp'],
+    source: 'https://www.perio.jp/member/certification/hygienist/',
+    fetchedAt: '2026-08-24',
+    confirmed: true,
+    firstStep: '日本歯周病学会の認定歯科衛生士のページで、申請資格チェックシートを開く。いまの自分に何が足りないかがその場で分かる。',
   },
   {
-    id: 'clinic-ortho', name: '矯正歯科', summary: null,
-    entryRequirements: [], requiredCertificationIds: ['ortho-jaao-2'], income: null,
-    fitFor: [], tradeoffs: [], source: null, fetchedAt: null, confirmed: false,
+    id: 'clinic-ortho',
+    name: '矯正を専門にする',
+    short: '矯正',
+    group: 'clinical',
+    field: '矯正',
+    summary: '矯正歯科の専門医療機関で、装置の管理と患者の口腔衛生管理を担う。',
+    verdict: 'recommend',
+    reality: '矯正を経験した人の割合は、年齢が下がるほど高くなります。10〜14歳の女性では 28.9%。歯科医師全体が減るなかで、矯正を専門にする歯科医師だけが増えています。',
+    entryRequirements: [
+      '矯正歯科の専門医療機関か、矯正も行う医院で働く',
+      '認定を取るなら、日本成人矯正歯科学会の会員であること',
+      '学会が認める矯正歯科専門医療機関等で原則常勤 3年以上の継続した矯正歯科臨床',
+      '学会等への参加',
+    ],
+    blocker: null,
+    income: null,
+    incomeNote: '矯正の多くは自費のため、診療報酬の統計に出てきません。担当者の収入を示す公的データもありません。',
+    tradeoffs: ['認定は累計でも約140名と狭い門', '常勤3年以上の矯正臨床が要件', '職場が矯正をやっていないと経験が積めない'],
+    fitFor: ['専門性'],
+    cautions: {
+      '転居できない': '矯正専門の医院が通える範囲にあるかどうかで決まります。',
+    },
+    requiredCertificationIds: ['ortho-jaao-2'],
+    source: 'https://www.jaao.jp/index.php/doctor-and-co-dental/doctor_eiseishi_02/',
+    fetchedAt: '2026-08-24',
+    confirmed: true,
+    firstStep: 'いまの職場で矯正をどれくらい扱っているか数えてみる。認定の要件は「常勤3年以上の継続した矯正歯科臨床」なので、そこが起点になる。',
   },
   {
-    id: 'clinic-implant', name: 'インプラント・自費中心', summary: null,
-    entryRequirements: [], requiredCertificationIds: ['implant-jsoi'], income: null,
-    fitFor: [], tradeoffs: [], source: null, fetchedAt: null, confirmed: false,
+    id: 'clinic-implant',
+    name: 'インプラントを専門にする',
+    short: 'インプラント',
+    group: 'clinical',
+    field: 'インプラント',
+    summary: '手術の介助と、埋入後のメインテナンスを担当する。',
+    verdict: 'conditional',
+    reality: 'インプラント手術をしている歯科診療所は全国の 35.2%。3軒に1軒です。ただし1施設あたりの実施は月 1.5 件で、日常的に数をこなす仕事ではありません。',
+    entryRequirements: [
+      '日本口腔インプラント学会の正会員歴 2年以上',
+      'インプラント治療の介助またはメインテナンスに携わっていること',
+      'インプラント専門歯科衛生士試験の合格',
+    ],
+    blocker: null,
+    income: null,
+    incomeNote: '自費のため、市場規模も担当者の収入も公的統計に出てきません。',
+    tradeoffs: ['職場がインプラントをやっていないと要件を満たせない', '実施件数は1施設あたり月1.5件と多くない', '学会の会員歴が2年必要'],
+    fitFor: ['専門性'],
+    cautions: {},
+    requiredCertificationIds: ['implant-jsoi'],
+    source: 'https://www.shika-implant.org/certification/hygienist/',
+    fetchedAt: '2026-08-24',
+    confirmed: true,
+    firstStep: 'いまの職場がインプラントをやっているかを確認する。やっていなければ、まず学会に入って正会員歴を積むところから（要件は会員歴2年以上）。',
   },
   {
-    id: 'hospital-oral-surgery', name: '病院歯科・口腔外科', summary: null,
+    id: 'clinic-pedo',
+    name: '小児を専門にする',
+    short: '小児',
+    group: 'clinical',
+    field: '小児',
+    summary: '子どもの歯を診る。予防指導と食生活・栄養の指導が中心になる。',
+    verdict: 'conditional',
+    reality: '虫歯そのものが消えかけています。5〜9歳で虫歯を持つ子は30年で 36.3% から 2.5% へ。子どもの数も減り続けます。削る仕事は確実に減りますが、予防と食生活の指導は残ります。仕事の中身が入れかわる領域です。',
+    entryRequirements: [
+      '小児歯科をやっている医院で働く',
+      '認定を取るなら、日本小児歯科学会に症例資料を提出（口腔内写真・PCR などの数値記録）',
+      'う蝕予防だけでなく食生活指導・栄養指導も審査の対象',
+    ],
+    blocker: null,
+    income: null,
+    incomeNote: '小児歯科の担当者の収入を示す公的データはありません。',
+    tradeoffs: ['市場そのものが縮んでいる', '治療から指導へ仕事の中身が変わる', '子どもの人口は2070年に約半分になる見通し'],
+    fitFor: ['専門性'],
+    cautions: {},
+    requiredCertificationIds: ['pedo-jspd'],
+    source: 'https://www.jspd.or.jp/dentist_system/about/',
+    fetchedAt: '2026-08-24',
+    confirmed: true,
+    firstStep: '縮んでいく市場だと分かったうえで選ぶかどうか。まず日本小児歯科学会の認定歯科衛生士制度のページを読んで、審査の中身を見る。',
+  },
+  {
+    id: 'clinic-prevention',
+    name: '予防とメインテナンスを深める',
+    short: '予防',
+    group: 'clinical',
+    field: '予防・メインテナンス',
+    summary: 'いまやっている仕事の延長。守るために通う人を担当し続ける。',
+    verdict: 'recommend',
+    reality: '歯科検診を受ける人が初めて6割を超え、80歳で20本以上の歯が残っている人も2年で1割ふえました。治療に来る人ではなく、守るために通う人がふえています。転職も資格も要らない、いちばん確実な道です。',
+    entryRequirements: [
+      '特別な資格は要らない。いまの仕事の延長',
+      '深めるなら日本歯科衛生士会の認定（生活習慣病予防・糖尿病予防指導など6分野）',
+      'その場合は専門研修 2コース・30単位以上 + 業務経験3年以上（うち実務1年以上）',
+    ],
+    blocker: null,
+    income: null,
+    incomeNote: '予防を深めたことで収入がどう変わるかを示す公的データはありません。',
+    tradeoffs: ['職場が予防に力を入れていないと評価されにくい', '目に見える成果が出るまで時間がかかる'],
+    fitFor: ['専門性', '安定'],
+    cautions: {
+      '転居できない': 'いまの職場のまま進められます。',
+    },
+    requiredCertificationIds: ['jdha-ninteidh'],
+    source: 'https://www.jdha.or.jp/learning/ninteidh.html',
+    fetchedAt: '2026-08-24',
+    confirmed: true,
+    firstStep: '日本歯科衛生士会の認定歯科衛生士のページで、6分野のうち自分の実務に近いものを1つ選ぶ。要件は業務経験3年以上とその分野の実務1年以上。',
+  },
+
+  // ---- 公表データが存在せず、画面に出さないもの ----
+  // 一般臨床（いまの働き方そのもの）・病院口腔外科・フリーランスは、
+  // 移行要件も収入も一次情報が取れていない。推測で埋めない。
+  {
+    id: 'hospital-oral-surgery', name: '病院歯科・口腔外科', short: '病院', group: 'clinical',
+    field: '口腔外科', summary: null,
     entryRequirements: [], requiredCertificationIds: ['anesthesia-jdsa'], income: null,
     fitFor: [], tradeoffs: [], source: null, fetchedAt: null, confirmed: false,
   },
   {
-    id: 'freelance', name: 'フリーランス・業務委託', summary: null,
+    id: 'freelance', name: 'フリーランス・業務委託', short: 'フリー', group: 'outside',
+    field: null, summary: null,
     entryRequirements: [], requiredCertificationIds: [], income: null,
     fitFor: [], tradeoffs: [], source: null, fetchedAt: null, confirmed: false,
   },

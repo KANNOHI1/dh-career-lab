@@ -76,15 +76,26 @@ const CERTIFICATIONS = [
     id: 'perio-jsp',
     name: '認定歯科衛生士（歯周病）',
     issuer: '特定非営利活動法人 日本歯周病学会',
-    holders: 1356,
-    holderRatio: 0.0090,
-    requirements: [],                     // TODO: 未調査
-    durationMonths: null,
-    costYen: null,
-    renewal: null,
-    unlocksTracks: [],
-    incomeImpact: null,
-    source: 'https://www.perio.jp/member/certification/hygienist/map.shtml',
+    // 2026-08-24 学会公式で更新。制度は平成17年発足、令和6年8月1日までに 1,431名。
+    holders: 1431,
+    holdersAsOf: '2024-08-01',
+    holderRatio: 0.0096,                  // 1,431 ÷ 就業DH 149,579。当サイトの計算
+    requirements: [
+      '日本歯周病学会の会員であること（正会員・準会員いずれも可）',
+      '症例の提出（様式1〜8・症例テンプレート・全顎エックス線写真）',
+      '書類審査の通過',
+      'ケースプレゼンテーション試験の合格',
+    ],
+    applicationWindow: '年2回（6月・10〜11月）',
+    durationMonths: null,                 // 申請から認定までの標準期間の公表なし
+    costYen: 22000,                       // 登録料（税込）。別途 学会年会費・申請料
+    costNote: '登録料 22,000円（税込）。ほかに学会の年会費と申請料がかかる',
+    renewal: '5年ごと',
+    unlocksTracks: ['clinic-perio'],
+    incomeImpact: null,                   // この認定で収入がどう変わるかを示す公的データはない
+
+    source: 'https://www.perio.jp/member/certification/hygienist/',
+    sourceApplication: 'https://www.perio.jp/member/certification/hygienist/application_new.shtml',
     fetchedAt: '2026-08-23',
   },
   {
@@ -93,14 +104,21 @@ const CERTIFICATIONS = [
     issuer: '公益社団法人 日本口腔インプラント学会',
     holders: 1167,
     holderRatio: 0.0078,
-    requirements: [],                     // TODO: 未調査
+    // 2026-08-24 学会公式で要件を確認
+    requirements: [
+      '日本口腔インプラント学会の正会員歴 2年以上',
+      'インプラント治療の介助またはメインテナンスに携わっていること',
+      'インプラント専門歯科衛生士試験の合格',
+    ],
     durationMonths: null,
-    costYen: null,
-    renewal: null,
+    costYen: 11000,                       // 試験審査料
+    costNote: '試験審査料 11,000円（税込）。ほかに学会の年会費。※金額は二次情報での確認にとどまる',
+    costVerified: false,                  // 学会公式ページ上で金額を直接確認できていない
+    renewal: null,                         // TODO: 更新規程は規程PDF内。未取得
     unlocksTracks: ['clinic-implant'],
     incomeImpact: null,
-    source: 'https://jsoi-th.org/syomu.html',
-    fetchedAt: '2026-08-23',
+    source: 'https://www.shika-implant.org/certification/hygienist/',
+    fetchedAt: '2026-08-24',
   },
   {
     id: 'ortho-jaao-2',
@@ -148,6 +166,57 @@ const CERTIFICATIONS = [
     unlocksTracks: [],
     incomeImpact: null,
     source: 'https://www.jdshinbi.net/academic/whitening/',
+    fetchedAt: '2026-08-24',
+  },
+
+  // ---- 日本歯科衛生士会の認定歯科衛生士（認定分野A）----
+  // 2026-08-24 https://www.jdha.or.jp/learning/ninteidh.html で確認。
+  // 6分野あり、共通の受講者基準が決まっている。分野ごとの保有者数は公表されていない。
+  {
+    id: 'jdha-ninteidh',
+    name: '認定歯科衛生士（認定分野A・6分野）',
+    issuer: '公益社団法人 日本歯科衛生士会',
+    fields6: [
+      '生活習慣病予防（特定保健指導・食生活改善指導担当者研修）',
+      '摂食嚥下リハビリテーション',
+      '在宅療養指導・口腔機能管理',
+      '糖尿病予防指導（徳島大学歯学部協力）',
+      '医科歯科連携・口腔機能管理（東京歯科大学委託）',
+      '歯科医療安全管理（広島大学歯学部委託）',
+    ],
+    holders: null,                        // 分野別の保有者数は公表されていない
+    holdersNote: '分野ごとの認定者数は公表されていない',
+    holderRatio: null,
+    requirements: [
+      '生涯研修制度の専門研修を 2コース・30単位以上（または指定研修で30単位）修了',
+      '歯科衛生士の業務経験 3年以上（うち各認定分野の実務経験 1年以上）',
+      '実習・演習をともなう認定研修では歯科衛生士賠償責任保険への加入',
+    ],
+    durationMonths: null,
+    costYen: null,                        // TODO: 研修費用は分野・開催回ごとに異なり一覧の公表なし
+    renewal: null,                        // TODO: 更新規程は未取得
+    unlocksTracks: ['home-visit', 'clinic-perio'],
+    incomeImpact: null,
+    source: 'https://www.jdha.or.jp/learning/ninteidh.html',
+    fetchedAt: '2026-08-24',
+  },
+  {
+    id: 'pedo-jspd',
+    name: '認定歯科衛生士（小児歯科）',
+    issuer: '一般社団法人 日本小児歯科学会',
+    // 2007年に制度開始。学会が技術・知識を審査して認定する。
+    holders: null,                        // TODO: 認定者数の公表を確認できていない（名簿は五十音別で掲載）
+    holderRatio: null,
+    requirements: [
+      '症例資料の作成と提出（口腔内写真・PCR などの数値記録）',
+      'う蝕予防の指導だけでなく、食生活指導・栄養指導も審査の対象',
+    ],
+    durationMonths: null,
+    costYen: null,                        // TODO
+    renewal: '更新申請あり',
+    unlocksTracks: ['clinic-pedo'],
+    incomeImpact: null,
+    source: 'https://www.jspd.or.jp/dentist_system/about/',
     fetchedAt: '2026-08-24',
   },
 

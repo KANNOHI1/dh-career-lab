@@ -402,9 +402,9 @@ function result() {
   const facts = otherPeopleFacts();
 
   // 0. 先に結論を出す。画面が長いので、上から順に読まなくても要点が分かるようにする。
-  const ranked = rankedTracks();
-  const top = ranked.filter(t => t.verdict !== 'not-recommended').slice(0, 2);
-  const nope = ranked.filter(t => t.verdict === 'not-recommended');
+  const rankedForSummary = rankedTracks();
+  const top = rankedForSummary.filter(t => t.verdict !== 'not-recommended').slice(0, 2);
+  const nope = rankedForSummary.filter(t => t.verdict === 'not-recommended');
   const bits = [];
   if (A.years) bits.push('実務 <strong>' + A.years + ' 年</strong>');
   if ((A.fields || []).length) bits.push('通ってきた領域 <strong>' + A.fields.length + ' つ</strong>');
@@ -558,7 +558,22 @@ function result() {
     ((A.priority || []).length ? '<strong>' + A.priority.join('・') + '</strong>' : 'もの') +
     ' と照らして並べています。';
   w.appendChild(lead);
-  rankedTracks().forEach((t, i) => w.appendChild(trackCard(t, i)));
+  // 「いまの仕事を続けたまま深める」と「外に出る」を分けて出す。
+  // 混ぜると、転職しない選択肢が見えなくなる。
+  const ranked = rankedTracks();
+  const groups = [
+    { key: 'clinical', title: '臨床を続けたまま深める', note: '職場を変えずに進める道です。' },
+    { key: 'outside', title: '臨床の外に出る', note: '働く場所そのものを変える道です。' },
+  ];
+  groups.forEach(g => {
+    const list = ranked.filter(t => (t.group || 'outside') === g.key);
+    if (!list.length) return;
+    const gh = document.createElement('p');
+    gh.className = 'grouphead';
+    gh.innerHTML = '<strong>' + g.title + '</strong>　<span class="cap">' + g.note + '</span>';
+    w.appendChild(gh);
+    list.forEach((t, i) => w.appendChild(trackCard(t, i)));
+  });
 
   // 11. 書いてくれた工夫
   const notes = [
@@ -647,6 +662,15 @@ function fieldSection() {
     if (f.caution) {
       html += '<p class="blk">' + f.caution + '</p>';
     }
+
+    // 市場を見せたら、その市場で戦う方法まで出す
+    const linked = TRACKS.filter(t => t.confirmed && t.field === f.id);
+    if (linked.length) {
+      html += '<p class="step1"><strong>この分野を深めるには</strong><br>' +
+        linked.map(t => t.name + '<br><span class="cap">' +
+          (t.entryRequirements[0] || '') + '</span>').join('<br>') +
+        '<br><span class="cap">くわしくは下の「この先の選択肢」に出しています。</span></p>';
+    }
     if (srcs.length) {
       html += '<p class="src">出典: ' + srcs.join('<br>') + '</p>';
     }
@@ -689,6 +713,16 @@ function supplySection() {
     S.perClinic.prev.toFixed(2) + ' 人 → ' + S.perClinic.now.toFixed(2) + ' 人。' +
     '（' + S.perClinic.note + '）</span>' +
     '<p class="src">出典: ' + S.clinics.source + '<br>' + S.dentists.source + '<br>' + S.hygienists.source + '</p>'));
+
+  const N = S.newGrad;
+  box.appendChild(card('card',
+    '<span class="cap">養成校を出た人の求人倍率（令和7年度）</span>' +
+    '<span class="big">' + N.ratioPerEmployed + ' 倍</span>' +
+    '<span class="cap">卒業 ' + N.graduates.toLocaleString() + ' 名に対して求人 ' +
+    N.jobOpenings.toLocaleString() + ' 名分。就職率は ' + pct(N.employmentRate) + '。</span>' +
+    '<ul class="plain">' + N.trend.map(x => '<li>' + x.label + '　' + x.v + ' 倍</li>').join('') + '</ul>' +
+    '<span class="cap">' + N.note + '</span>' +
+    '<p class="src">出典: ' + N.source + '</p>'));
 
   S.readings.forEach(r => {
     box.appendChild(card('card',
@@ -747,6 +781,13 @@ function regionSection() {
 function trackScore(t) {
   let s = 0;
   (A.priority || []).forEach(p => { if (t.fitFor.indexOf(p) >= 0) s += 2; });
+  // 通ってきた領域は、そのまま深められる。いちばん近い選択肢として上に出す
+  if (t.field && (A.fields || []).indexOf(t.field) >= 0) s += 4;
+  // 縮んでいる分野は、通っていても上位に置かない
+  if (t.field) {
+    const f = FIELDS_DEMAND.find(x => x.id === t.field);
+    if (f && f.direction === 'down') s -= 3;
+  }
   if (t.id === 'instructor') {
     if (A.teachInterest === 'すごくある') s += 4;
     else if (A.teachInterest === '少しある') s += 2;
@@ -795,10 +836,11 @@ function trackCard(t, idx) {
   // 養成校が縮んでいる事実は、数字で出す
   if (t.marketShrink) {
     const y = t.marketShrink.years;
-    html += '<p style="margin:.8rem 0 0"><strong>養成校の定員割れ</strong><br>' +
-      y.map(r => r.year + '年 ' + Math.round(r.underfilledRatio * 100) + '%').join(' → ') + '</p>' +
+    html += '<p style="margin:.8rem 0 0"><strong>定員に満たない養成校の割合</strong><br>' +
+      y.map(r => (r.label || r.year) + ' ' + Math.round(r.underfilledRatio * 1000) / 10 + '%').join('<br>') + '</p>' +
       '<span class="cap">' + t.marketShrink.note + '</span>' +
-      '<span class="cap">閉校・募集停止: ' + t.marketShrink.closures.join(' / ') + '</span>';
+      '<span class="cap">閉校・募集停止: ' + t.marketShrink.closures.join(' / ') + '</span>' +
+      (t.marketShrink.teachers ? '<span class="cap">' + t.marketShrink.teachers.note + '</span>' : '');
     addSrc(t.marketShrink.source); addSrc(t.marketShrink.capacitySource);
   }
 
@@ -880,7 +922,8 @@ function trackCard(t, idx) {
     ).forEach(u => { if (u) srcs.add(u); });
   });
   FIELDS_DEMAND.forEach(f => f.evidence.forEach(e => { if (e.source) srcs.add(e.source); }));
-  [SUPPLY.clinics.source, SUPPLY.dentists.source, SUPPLY.hygienists.source,
+  [SUPPLY.clinics.source, SUPPLY.dentists.source, SUPPLY.hygienists.source, SUPPLY.newGrad.source,
+   REGION_DATA.newGradSource,
    REGION_DATA.source, REGION_DATA.national.source].forEach(u => { if (u) srcs.add(u); });
   [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource, MARKET.ageDistributionSourceSecondary,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });

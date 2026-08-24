@@ -129,17 +129,15 @@ function forget() {
 // ---------- 導入ページ ----------
 function fillLanding() {
   const M = MARKET, S = SALARY;
-  const b40 = S.byAgeBand.find(b => b.band === '40-44');
   const b45 = S.byAgeBand.find(b => b.band === '45-49');
   const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
 
+  const nTracks = TRACKS.filter(t => t.confirmed).length;
   set('#l-employed', M.employedHygienists.toLocaleString());
   set('#l-clinic', pct(M.workplaceBreakdown.clinic.ratio));
-  set('#l-latent', M.latentHygienists.toLocaleString());
-  set('#l-rate', pct(M.employmentRate));
-  set('#l-b40', man(b40.annualYen));
+  set('#l-fifties', pct(M.ageDistribution.fiftiesAndOver));
   set('#l-b45', man(b45.annualYen));
-  set('#l-tracks', TRACKS.filter(t => t.confirmed).length);
+  set('#l-tracks', nTracks);
   set('#l-src', $('#srccount').textContent);
 }
 
@@ -431,8 +429,8 @@ function result() {
     '<span class="cap">全国で働いている歯科衛生士</span>' +
     '<span class="big">' + M.employedHygienists.toLocaleString() + ' 人</span>' +
     '<span class="cap">このうち ' + pct(M.workplaceBreakdown.clinic.ratio) + ' が診療所勤務。' +
-    'さらに免許を持ちながら働いていない人が ' + M.latentHygienists.toLocaleString() + ' 人います' +
-    '（就業率 ' + pct(M.employmentRate) + '）。</span>' +
+    '50代以上が ' + pct(M.ageDistribution.fiftiesAndOver) + ' を占めていて、' +
+    M.fiftiesTrend + '。</span>' +
     '<p class="src">出典: 厚生労働省 令和6年 衛生行政報告例 / ' + M.source + '</p>'));
 
   // 2. 経験年数
@@ -732,7 +730,7 @@ function trackCard(t, idx) {
       (t.marketShrink ? [t.marketShrink.source, t.marketShrink.capacitySource] : [])
     ).forEach(u => { if (u) srcs.add(u); });
   });
-  [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource,
+  [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource, MARKET.ageDistributionSourceSecondary,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });
   $('#srccount').textContent = srcs.size;
 })();

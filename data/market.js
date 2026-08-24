@@ -4,9 +4,14 @@ const MARKET = {
   // --- 就業者数（厚生労働省「令和6年衛生行政報告例」2024年末時点）---
   employedHygienists: 149579,
   employedHygienistsPrev: 145183,          // 令和4年末
-  licensedTotal: 321241,                   // 免許登録者総数
-  latentHygienists: 171662,                // 推定値（登録 − 就業）
-  employmentRate: 0.466,                   // 就業割合
+  // 2026-08-24 検証: 免許登録者総数 321,241 の一次資料を確認できなかった。
+  // 衛生行政報告例は「就業者」しか扱っていない。出典は二次情報 1 本のみ。
+  // さらに歯科衛生士免許は死亡・引退で抹消されない累積値のため、
+  // 「登録 − 就業」を潜在有資格者と呼ぶのは誤り（物故者・引退者を含む）。
+  // 画面では使わない。台帳との突き合わせのためだけに残す。
+  licensedTotal: 321241,                   // 未検証。二次情報のみ
+  latentHygienists: 171662,                // 推定値（登録 − 就業）。使用禁止
+  employmentRate: 0.466,                   // 上記から算出。使用禁止
   source: 'https://www.jdha.or.jp/aboutdh/shugyo.html',
   sourceSecondary: 'https://www.whitecross.co.jp/articles/view/3937',
   fetchedAt: '2026-08-23',
@@ -32,10 +37,14 @@ const MARKET = {
   averageAge: 36.5,                        // 常勤。令和4年 賃金構造基本統計調査
   ageDistribution: {
     under25: null,                         // TODO: 正確な値は未取得（横ばい傾向の記述のみ）
-    forties: 0.257,
-    fiftiesAndOver: 0.284,
+    forties: 0.257,                        // 二次情報のみ
+    fiftiesAndOver: 0.284,                 // 2026-08-24 一次側で確認済み
   },
-  ageDistributionSource: 'https://www.guppy.jp/dh/og/dh-knowledge-27/',
+  // 50代以上 28.4% は日本歯科衛生士会（厚労省 令和6年衛生行政報告例より作成）で確認。
+  // 平成24年度以降ふえ続けている。40代 25.7% は二次情報のみで未検証。
+  ageDistributionSource: 'https://www.jdha.or.jp/aboutdh/shugyo.html',
+  ageDistributionSourceSecondary: 'https://www.guppy.jp/dh/og/dh-knowledge-27/',
+  fiftiesTrend: '平成24年度以降ふえ続けている',
 
   // --- 左利き ---
   leftHandedRateGeneral: 0.10,             // 一般人口 約10〜12%。下限を採用

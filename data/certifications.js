@@ -33,8 +33,11 @@ const CERTIFICATIONS = [
     id: 'anesthesia-jda',
     name: '臨床歯科麻酔認定歯科衛生士',
     issuer: '一般社団法人 日本歯科医学振興機構 (JDA)',
-    holders: 9000,                        // 累計受講者。歯科医師を含むため DH 単独の人数は不明
-    holdersNote: '累計受講者数。歯科医師を含む。歯科衛生士単独の保有者数は不明',
+    // 2026-08-24 発行元の公式サイトで更新（99回・受講総数 11,203名）。
+    // 第1弾の 9,000名（二次情報）から差し替えた。
+    holders: 11203,                       // 累計受講者。歯科医師を含むため DH 単独の人数は不明
+    holdersAsOf: '2026-08-24',
+    holdersNote: '累計受講者数（講習会99回）。歯科医師を含む。歯科衛生士単独の保有者数は非公表',
     holderRatio: null,                    // 累計かつ職種混在のため算出しない
     requirements: [
       '実務経験3年以上（免許取得後2年以上）',
@@ -44,11 +47,17 @@ const CERTIFICATIONS = [
     ],
     durationMonths: 1,                    // 1日講習 + 試験
     costYen: 40000,                       // 講習・試験 28,000 + 登録 12,000
-    renewal: '5年ごと',
+    // 台帳で「5年ごと / 3年ごと」と割れていたが、発行元の公式で 3 年と確定（2026-08-24）
+    renewal: '3年ごと（継続講習2つ以上の受講 + 更新料 10,000円）',
     unlocksTracks: ['clinic-general', 'clinic-implant'],
     incomeImpact: null,
-    source: 'https://oned.jp/career/articles/6851be64-bc6c-4b18-a71e-aa94e224b1e8',
-    fetchedAt: '2026-08-23',
+    source: 'https://www.japan-da.com/system',
+    sourceSecondary: 'https://oned.jp/career/articles/6851be64-bc6c-4b18-a71e-aa94e224b1e8',
+    fetchedAt: '2026-08-24',
+    // 発行元自身が公式サイトで明言している（2026-08-24 確認）:
+    //   「『臨床歯科麻酔認定歯科衛生士』の認定があれば麻酔ができるということではありません」
+    //   「独自の審査基準のもと任意で認定するものであり、国家資格や公的資格とは性質の違うもの」
+    issuerDisclaimer: '認定があれば麻酔ができるということではない。国家資格・公的資格とは性質が違う',
     // 希少性の根拠には使わない。現場の実態がそれを支持しないため。
     // 保有者の証言（2026-08-23 聞き取り）:
     //   「衛生士は法律上本来みんな出来る。今までそこまでやることじゃなかったが、
@@ -97,32 +106,49 @@ const CERTIFICATIONS = [
     id: 'ortho-jaao-2',
     name: '認定矯正歯科衛生士（2級）',
     issuer: '日本成人矯正歯科学会',
-    holders: 140,                         // 約140名
-    holderRatio: 0.0009,
-    requirements: [],                     // TODO: 未調査
+    // 2026-08-24 学会公式で確認。「これまでに約140名の方が取得されました」＝**累計取得者**。
+    // 更新制度があるため、いま有効な認定者はこれより少ない可能性がある。
+    holders: 140,                         // 累計取得者（約140名）
+    holdersNote: '累計の取得者数。現在有効な認定者数ではない',
+    holderRatio: 0.0009,                  // 累計 ÷ 就業DH。概算
+    requirements: [
+      '日本の歯科衛生士免許',
+      '本学会の会員であること',
+      '学会が認める矯正歯科専門医療機関等で原則常勤3年以上の継続した矯正歯科臨床',
+      '本学会の学会等に参加していること',
+    ],
     durationMonths: null,
     costYen: null,
-    renewal: null,
+    renewal: '更新制度あり（申請受付 1月1日〜6月30日）',
     unlocksTracks: ['clinic-ortho'],
     incomeImpact: null,
-    source: 'https://oned.jp/career/articles/6471d62c-6ddc-4667-894b-910780b4d8b7',
-    fetchedAt: '2026-08-23',
+    source: 'https://www.jaao.jp/index.php/doctor-and-co-dental/doctor_eiseishi_02/',
+    fetchedAt: '2026-08-24',
   },
   {
     id: 'whitening-jdshinbi',
     name: 'ホワイトニングコーディネーター',
     issuer: '一般社団法人 日本歯科審美学会',
-    holders: 1452,
-    holdersAsOf: '2021-08',
-    holderRatio: 0.0097,
-    requirements: [],
+    // 2026-08-24 検証: 保有者数を確定できなかったため null にした。
+    //  - 学会公式（下記 source）に認定者数の記載がない
+    //  - 従来の出典 1,452名（2021年8月末）は歯科医院のブログが出典
+    //  - 別途「2013年3月末 4,791名」という数字もあり、桁が合わない
+    //  - 公式の講習会日程は年5回・定員合計 1,270名。この規模で累計1,452名はあり得ない
+    // 数値は出さない。資格の存在と受験資格だけを扱う。
+    holders: null,                        // 公表されていない
+    holdersNote: '学会が認定者数を公表していない。出回っている数値は相互に矛盾する',
+    holderRatio: null,
+    requirements: [
+      '歯科衛生士のみ受講・受験可',
+      '学会主催の講習会の受講と認定試験の合格',
+    ],
     durationMonths: null,
-    costYen: null,
-    renewal: '学術大会参加による更新が必要',
+    costYen: 8000,                        // 認定講習会参加費 + 受験料
+    renewal: '更新あり（新規向け講習会は更新対象外）',
     unlocksTracks: [],
     incomeImpact: null,
-    source: 'https://www.shimokita-brene-dental.com/blog/',
-    fetchedAt: '2026-08-23',
+    source: 'https://www.jdshinbi.net/academic/whitening/',
+    fetchedAt: '2026-08-24',
   },
 
   // ---- 教育トラックの必須資格 ----

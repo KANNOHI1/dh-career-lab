@@ -18,6 +18,10 @@ const SRC_SHINRYO = 'https://www.mhlw.go.jp/toukei/saikin/hw/sinryo/tyosa24/';
 const SRC_SHIKKAN_R4 = 'https://www.mhlw.go.jp/content/10804000/001112405.pdf';
 const SRC_SHIKKAN_R6 = 'https://www.mhlw.go.jp/stf/newpage_59190.html';
 const SRC_JINKO = 'https://www.ipss.go.jp/pp-zenkoku/j/zenkoku2023/pp2023_gaiyou.pdf';
+//   E 厚生労働省「令和5年 医療施設（静態・動態）調査」表12・表18（実施している施設の数）
+const SRC_SEITAI = 'https://www.mhlw.go.jp/toukei/saikin/hw/iryosd/23/dl/02sisetu05.pdf';
+//   F 厚生労働省「令和6年 医師・歯科医師・薬剤師統計」（主たる診療科別の歯科医師数）
+const SRC_ISHI = 'https://www.mhlw.go.jp/toukei/saikin/hw/ishi/24/dl/R06_1gaikyo.pdf';
 
 // 統計の読み方についての注意。画面にも出す。
 const FIELD_CAVEAT = {
@@ -58,6 +62,7 @@ const FIELDS_DEMAND = [
       { label: '65歳以上が総人口に占める割合', value: '28.6%（2020年）→ 33.9%（2038年）→ 38.7%（2070年）', source: SRC_JINKO },
       { label: '85歳以上でう歯を持つ人', value: '39.4%（平成5年）→ 83.8%（令和4年）', source: SRC_SHIKKAN_R4 },
       { label: '在宅医療の1日当たり点数', value: '+2.1%（構成割合 3.3%）', source: SRC_SHINRYO },
+      { label: '在宅医療サービスを実施している歯科診療所', value: '22,674 施設（歯科診療所の 33.9%）。介護保険によるサービスは 11,698 施設（17.5%）', source: SRC_SEITAI },
     ],
     caution: '65歳以上の人口そのものは2043年ごろがピークで、その後は減ります。増え続けるのは「割合」です。',
   },
@@ -69,18 +74,21 @@ const FIELDS_DEMAND = [
     evidence: [
       { label: '手術の1日当たり点数', value: '+4.8%（構成割合 2.6%）', source: SRC_SHINRYO },
       { label: '麻酔の1日当たり点数', value: '+15.2%（歯科の診療行為で最大の伸び率）', source: SRC_SHINRYO },
+      { label: '歯科口腔外科を主たる診療科とする歯科医師', value: '4,364人（−1.5%）。平均年齢43.7歳で歯科の中では若い', source: SRC_ISHI },
     ],
     caution: '麻酔は伸び率が大きい一方で、1日当たり 3.8 点と規模そのものは小さい区分です。',
   },
   {
     id: '矯正',
     direction: 'up',
-    headline: '保険でみる矯正は伸びている。自費は統計に出ない',
-    body: '保険が使える矯正（顎変形症など）の点数は伸びています。ただし矯正の多くは自費で、そちらは公的統計に出てきません。「矯正の市場が伸びているか」を公的な数字で答えられるのは保険の部分だけです。',
+    headline: '若い世代ほど経験者が多い。供給側でも増えている',
+    body: '矯正を経験した人は全体では 7.7% ですが、年齢が下がるほど高くなります。10〜14歳の女性では 28.9%。いまの高齢者（2〜3%）とは桁が違います。世代が入れ替わるだけで経験者の割合は上がっていきます。矯正を専門にする歯科医師も、歯科医師全体が減る中で増えています。',
     evidence: [
-      { label: '歯科矯正の1日当たり点数', value: '+10.4%', source: SRC_SHINRYO },
+      { label: '矯正歯科の経験がある人', value: '全体 7.7%。ただし10〜14歳の女性は 28.9%、35〜39歳の女性は 29.2%、70〜74歳は 2.4%', source: SRC_SHIKKAN_R4 },
+      { label: '矯正歯科を主たる診療科とする歯科医師', value: '4,448人（+3.6%）。歯科医師全体が −1.5% の中で増えている', source: SRC_ISHI },
+      { label: '歯科矯正の1日当たり点数（保険分）', value: '+10.4%', source: SRC_SHINRYO },
     ],
-    caution: '自費の矯正は公的統計に存在しません。ここに出ている伸びは保険適用分だけの話です。',
+    caution: '自費の矯正そのものの市場規模は公的統計に存在しません。ただし「経験した人の割合」は年齢が下がるほど高く、供給側でも矯正を主とする歯科医師だけが増えています。',
   },
   {
     id: '一般',
@@ -101,15 +109,18 @@ const FIELDS_DEMAND = [
       { label: '5〜9歳でう歯を持つ子', value: '36.3%（平成5年）→ 2.5%（令和4年）', source: SRC_SHIKKAN_R4 },
       { label: '15〜24歳の1人平均DMF歯数', value: '9.0本（平成5年）→ 2.5本（令和4年）', source: SRC_SHIKKAN_R4 },
       { label: '0〜14歳の人口', value: '1,503万人（2020年）→ 797万人（2070年）', source: SRC_JINKO },
+      { label: '小児歯科を主たる診療科とする歯科医師', value: '1,964人（−2.6%）', source: SRC_ISHI },
     ],
   },
   {
     id: 'インプラント',
-    direction: 'unknown',
-    headline: '公的な数字が存在しない',
-    body: 'インプラントはほとんどが自費で、保険の統計に出てきません。市場規模を示す公的なデータは見つかっていません。ここは数字で語れない領域です。',
-    evidence: [],
-    caution: '数字がないことは、市場が小さいことを意味しません。公的に数えられていないだけです。',
+    direction: 'flat',
+    headline: '3軒に1軒がやっている。ただし金額は分からない',
+    body: 'インプラント手術をしている歯科診療所は、全国の 35.2% にあたる 23,503 施設。特別な医院だけがやる治療ではなくなっています。ただし自費なので、いくらの市場なのか・伸びているのかは公的統計に出てきません。分かるのは「実施している施設の数」までです。',
+    evidence: [
+      { label: 'インプラント手術を実施している歯科診療所', value: '23,503 施設（歯科診療所の 35.2%）', source: SRC_SEITAI },
+    ],
+    caution: '実施している施設の数であって、手術の件数でも金額でもありません。増えているか減っているかは、この数字だけでは分かりません。',
   },
   {
     id: '審美',

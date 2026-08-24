@@ -15,3 +15,5 @@ data/*
 !data/salary.js
 !data/tracks.js
 !data/fields.js
+!data/supply.js
+!data/regions.js

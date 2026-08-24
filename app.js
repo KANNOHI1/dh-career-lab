@@ -543,7 +543,11 @@ function result() {
   // 8. 分野ごとの動き（市場の側から見た材料）
   w.appendChild(fieldSection());
 
-  // 9. この先の選択肢
+  // 9. 働く場所の数と地域差
+  w.appendChild(supplySection());
+  w.appendChild(regionSection());
+
+  // 10. この先の選択肢
   const h = document.createElement('h3');
   h.textContent = 'この先の選択肢';
   w.appendChild(h);
@@ -556,7 +560,7 @@ function result() {
   w.appendChild(lead);
   rankedTracks().forEach((t, i) => w.appendChild(trackCard(t, i)));
 
-  // 10. 書いてくれた工夫
+  // 11. 書いてくれた工夫
   const notes = [
     ['左利きでの工夫', A.leftHand],
     ['ブランクからの戻り方', A.comeback],
@@ -657,6 +661,82 @@ function fieldSection() {
 
   box.appendChild(card('unknown',
     FIELD_CAVEAT.shinryoNote + '<br><br>' + FIELD_CAVEAT.jihiNote));
+
+  return box;
+}
+
+// ---------- 働く場所の数 ----------
+// 需要が伸びても働き口が増えるとは限らない。供給側も並べる。
+function supplySection() {
+  const S = SUPPLY;
+  const box = document.createElement('div');
+
+  const h = document.createElement('h3');
+  h.textContent = '働く場所の数';
+  box.appendChild(h);
+
+  box.appendChild(card('card flag',
+    '<span class="tag">この2年の動き</span>' +
+    '<ul class="plain">' +
+    '<li>歯科診療所 <strong>' + S.clinics.count.toLocaleString() + ' 施設</strong>' +
+      '（' + S.clinics.delta + '）</li>' +
+    '<li>歯科医師 <strong>' + S.dentists.count.toLocaleString() + ' 人</strong>' +
+      '（' + Math.round(S.dentists.deltaRatio * 1000) / 10 + '%）</li>' +
+    '<li>歯科衛生士 <strong>' + S.hygienists.count.toLocaleString() + ' 人</strong>' +
+      '（+' + Math.round(S.hygienists.deltaRatio * 1000) / 10 + '%）</li>' +
+    '</ul>' +
+    '<span class="cap">1 施設あたりの歯科衛生士は ' +
+    S.perClinic.prev.toFixed(2) + ' 人 → ' + S.perClinic.now.toFixed(2) + ' 人。' +
+    '（' + S.perClinic.note + '）</span>' +
+    '<p class="src">出典: ' + S.clinics.source + '<br>' + S.dentists.source + '<br>' + S.hygienists.source + '</p>'));
+
+  S.readings.forEach(r => {
+    box.appendChild(card('card',
+      '<span class="tname">' + r.title + '</span>' +
+      '<p style="margin:.5rem 0 0">' + r.body + '</p>'));
+  });
+
+  box.appendChild(card('unknown', S.caveat));
+  return box;
+}
+
+// ---------- 地域による差 ----------
+function regionSection() {
+  const R = REGION_DATA;
+  const box = document.createElement('div');
+
+  const h = document.createElement('h3');
+  h.textContent = '地域による差';
+  box.appendChild(h);
+
+  const mine = R.areas.find(a => a.name === A.region);
+  const lead = document.createElement('p');
+  lead.className = 'hint';
+  lead.innerHTML = mine
+    ? '<strong>' + mine.name + '</strong>と東京都を並べています。'
+    : '北海道と東京都のデータだけを持っています。あなたの地域の数字ではありませんが、' +
+      '地域でどれくらい差が出るかの例として見てください。';
+  box.appendChild(lead);
+
+  R.areas.forEach(a => {
+    const isMine = mine && a.name === mine.name;
+    let html = (isMine ? '<span class="tag mine">あなたの地域</span>' : '') +
+      '<span class="tname">' + a.name + '</span>' +
+      '<span class="cap">65歳以上が総人口に占める割合</span>' +
+      '<ul class="plain">' +
+      R.years.map((y, i) => '<li>' + y + '年：<strong>' + a.aged65[i] + '%</strong>' +
+        '（うち75歳以上 ' + a.aged75[i] + '%）</li>').join('') +
+      '</ul>' +
+      '<p style="margin:.6rem 0 0">' + a.note + '</p>';
+    box.appendChild(card(isMine ? 'card flag' : 'card', html));
+  });
+
+  box.appendChild(card('card',
+    '<span class="tname">' + R.reading.title + '</span>' +
+    '<p style="margin:.5rem 0 0">' + R.reading.body + '</p>' +
+    '<span class="cap">人口10万人あたりの歯科医師数は全国 ' + R.national.dentistsPer100k +
+    '。いちばん多いのが ' + R.national.highest + '、少ないのが ' + R.national.lowest + '。</span>' +
+    '<p class="src">出典: ' + R.source + '<br>' + R.national.source + '</p>'));
 
   return box;
 }
@@ -800,6 +880,8 @@ function trackCard(t, idx) {
     ).forEach(u => { if (u) srcs.add(u); });
   });
   FIELDS_DEMAND.forEach(f => f.evidence.forEach(e => { if (e.source) srcs.add(e.source); }));
+  [SUPPLY.clinics.source, SUPPLY.dentists.source, SUPPLY.hygienists.source,
+   REGION_DATA.source, REGION_DATA.national.source].forEach(u => { if (u) srcs.add(u); });
   [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource, MARKET.ageDistributionSourceSecondary,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });
   $('#srccount').textContent = srcs.size;

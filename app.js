@@ -5,6 +5,17 @@ const A = {};                                   // 回答
 const $ = (s, r) => (r || document).querySelector(s);
 
 const REGIONS = ['北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県','茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県','新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県','静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県','徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'];
+// 年代。ageForLimit は「年齢の上限に引っかかるか」を判定するための代表値。
+// その年代でいちばん上の年齢を使う（上限を超えないことを確実にするため）。
+const AGE_BANDS = [
+  { label: '20代', band: '25-29', ageForLimit: 29 },
+  { label: '30代', band: '30-34', ageForLimit: 39 },
+  { label: '40代前半', band: '40-44', ageForLimit: 44 },
+  { label: '40代後半', band: '45-49', ageForLimit: 49 },
+  { label: '50代', band: '50-54', ageForLimit: 59 },
+  { label: '60代以上', band: null, ageForLimit: 69 },
+];
+
 const FIELDS = ['一般','矯正','インプラント','口腔外科','小児','歯周治療','予防・メインテナンス','訪問','審美'];
 
 // この設問が変わると同じステップ内の表示が変わる（条件付き表示・上限3件の付け外し）
@@ -25,6 +36,11 @@ const STEPS = [
         hint:'ざっくりで大丈夫です。答えたくなければ選ばなくて構いません。',
         opts:['〜250万','250〜350万','350〜450万','450〜550万','550万〜','答えたくない'] },
       { id:'region', t:'お住まいの地域は？', type:'select', opts:REGIONS },
+      // 年代を聞くのは 2 つの理由から。行政の採用に年齢の上限があること、
+      // 年収の統計が年齢階級別になっていること。答えなくても結果は全部読める。
+      { id:'ageBand', t:'年代は？', type:'radio',
+        hint:'自治体の採用に年齢の上限があるため、当てはまるかどうかの判定に使います。',
+        opts:AGE_BANDS.map(b => b.label) },
     ],
   },
   {
@@ -426,6 +442,10 @@ function result() {
     w.appendChild(card('card flag', h));
   }
 
+  // 0-2. 立ち位置の図。領域を選んでいなければ出さない
+  const fmap = fieldMap();
+  if (fmap) w.appendChild(fmap);
+
   // 1. 母数
   w.appendChild(card('card',
     '<span class="cap">全国で働いている歯科衛生士</span>' +
@@ -530,13 +550,20 @@ function result() {
 
   // 7. 年収
   if (A.income && A.income !== '答えたくない') {
-    const b40 = S.byAgeBand.find(b => b.band === '40-44');
-    const b45 = S.byAgeBand.find(b => b.band === '45-49');
+    // 年代を答えてもらえていれば、その階級を出す。なければ全年齢のピークを出す
+    const me = A.ageBand ? AGE_BANDS.find(b => b.label === A.ageBand) : null;
+    const mine = me && me.band ? S.byAgeBand.find(b => b.band === me.band) : null;
+    const peak = S.byAgeBand.reduce((a, b) => (b.annualYen > a.annualYen ? b : a));
     w.appendChild(card('card',
       '<span class="cap">年収の全国データ（常勤）</span>' +
-      '<span class="big">40〜44歳 ' + man(b40.annualYen) + ' → 45〜49歳 ' + man(b45.annualYen) + '</span>' +
-      '<span class="cap">全体平均は ' + man(S.national.annualYen) + '。' +
-      '45〜49歳が全年齢でもっとも高くなります。あなたの回答は「' + A.income + '」でした。</span>' +
+      '<span class="big">' + (mine ? mine.band + '歳 ' + man(mine.annualYen)
+                                   : peak.band + '歳 ' + man(peak.annualYen)) + '</span>' +
+      '<span class="cap">' +
+      (mine ? 'あなたと同じ年代の平均です。' +
+              (mine.band === peak.band ? 'ここが全年齢でいちばん高い階級です。'
+                                       : '全年齢でいちばん高いのは ' + peak.band + '歳の ' + man(peak.annualYen) + '。')
+            : '全年齢でいちばん高い階級です。') +
+      '全体平均は ' + man(S.national.annualYen) + '。あなたの回答は「' + A.income + '」でした。</span>' +
       '<p class="src">' + S.curveCaveat + '<br>出典: ' + S.sourceName + ' / ' + S.source + '</p>'));
   }
 
@@ -615,6 +642,114 @@ function result() {
   wipe.appendChild(btn);
   w.appendChild(wipe);
   return w;
+}
+
+// ---------- 分野マップ ----------
+// 自分が通ってきた領域を、市場の方向の上に置く。
+// 「自分の経験が伸びる場所に乗っているか」を最初に見せるための図。
+// 合成指標（総合力・偏差値のようなもの）は作らない。軸はどちらも実データ。
+const MAP_X = { down: 1, unknown: 2, flat: 3, up: 4 };
+const MAP_X_LABEL = ['へっている', '数字なし', '横ばい', 'ふえている'];
+// 図の中では長い分野名が入りきらない。図の中だけ短くする
+const MAP_SHORT = { '予防・メインテナンス': '予防', 'インプラント': 'インプラ' };
+
+function fieldMap() {
+  const mine = (A.fields || []).filter(f => FIELDS_DEMAND.some(d => d.id === f));
+  if (!mine.length) return null;                 // 領域を選んでいなければ図は出さない
+
+  const fy = A.fieldYears || {};
+  const maxYears = Math.max(5, ...mine.map(f => fy[f] || 0));
+
+  // ビューボックス。スマホ幅でも読めるよう横長にしすぎない
+  const W = 320, H = 260;
+  const padL = 34, padR = 14, padT = 16, padB = 44;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const xAt = d => padL + (MAP_X[d] - 0.5) * (plotW / 4);
+  const yAt = y => padT + plotH - (Math.min(y || 0, maxYears) / maxYears) * plotH;
+
+  let g = '';
+
+  // 縦の目盛り（経験年数）
+  [0, Math.round(maxYears / 2), maxYears].forEach(v => {
+    const y = yAt(v);
+    g += '<line x1="' + padL + '" y1="' + y + '" x2="' + (W - padR) + '" y2="' + y +
+         '" stroke="var(--line)" stroke-width="1"/>' +
+         '<text x="' + (padL - 6) + '" y="' + (y + 4) + '" text-anchor="end" ' +
+         'font-size="9" fill="var(--muted)">' + v + '年</text>';
+  });
+
+  // 横の区切りとラベル
+  MAP_X_LABEL.forEach((lab, i) => {
+    const cx = padL + (i + 0.5) * (plotW / 4);
+    g += '<text x="' + cx + '" y="' + (H - padB + 16) + '" text-anchor="middle" ' +
+         'font-size="9" fill="var(--muted)">' + lab + '</text>';
+    if (i > 0) {
+      const bx = padL + i * (plotW / 4);
+      g += '<line x1="' + bx + '" y1="' + padT + '" x2="' + bx + '" y2="' + (padT + plotH) +
+           '" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 3"/>';
+    }
+  });
+
+  // 通っていない分野を薄く置く（全体の中での位置が分かるように）
+  FIELDS_DEMAND.filter(d => mine.indexOf(d.id) < 0).forEach(d => {
+    const cx = xAt(d.direction);
+    g += '<circle cx="' + cx + '" cy="' + (padT + plotH - 6) + '" r="3" fill="var(--line)"/>';
+  });
+
+  // 自分が通った領域
+  // 点の中に番号だけ置き、名前は図の下に凡例として出す。
+  // 図の中に名前を書くと、同じ位置に来たときに必ず重なって読めなくなる。
+  const placed = [];
+  const legend = [];
+  mine.forEach((f, i) => {
+    const d = FIELDS_DEMAND.find(x => x.id === f);
+    const yrs = fy[f] || 0;
+    let cx = xAt(d.direction), cy = yAt(yrs);
+    while (placed.some(p => Math.abs(p.x - cx) < 20 && Math.abs(p.y - cy) < 16)) { cx += 21; }
+    placed.push({ x: cx, y: cy });
+    const color = d.direction === 'down' ? 'var(--warn)' : 'var(--accent)';
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="10" fill="' + color + '" fill-opacity="0.9"/>' +
+         '<text x="' + cx + '" y="' + (cy + 3.5) + '" text-anchor="middle" font-size="10" ' +
+         'font-weight="700" fill="var(--bg)">' + (i + 1) + '</text>';
+    legend.push({ n: i + 1, name: f, yrs: yrs, dir: d.direction });
+  });
+
+  const box = document.createElement('div');
+  const h = document.createElement('h3');
+  h.textContent = 'いまの立ち位置';
+  box.appendChild(h);
+
+  const lead = document.createElement('p');
+  lead.className = 'hint';
+  lead.textContent = '横は市場がどっちに動いているか、縦はあなたがその領域にいた年数です。' +
+    '薄い点は、通っていない分野の位置です。';
+  box.appendChild(lead);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'fieldmap';
+  wrap.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
+    'aria-label="通ってきた領域を市場の方向と経験年数で並べた図">' + g + '</svg>' +
+    '<ul class="maplegend">' + legend.map(l =>
+      '<li><span class="n' + (l.dir === 'down' ? ' down' : '') + '">' + l.n + '</span>' +
+      l.name + (l.yrs ? ' ' + l.yrs + '年' : '') +
+      '<span class="cap">（' + DIRECTION_LABEL[l.dir] + '）</span></li>').join('') + '</ul>';
+  box.appendChild(wrap);
+
+  // 図だけでは読み取れないので、言葉でも言う
+  const ups = mine.filter(f => {
+    const d = FIELDS_DEMAND.find(x => x.id === f); return d && d.direction === 'up';
+  });
+  const downs = mine.filter(f => {
+    const d = FIELDS_DEMAND.find(x => x.id === f); return d && d.direction === 'down';
+  });
+  const lines = [];
+  if (ups.length) lines.push('<strong>' + ups.join('・') + '</strong> は、いま伸びている側にあります。');
+  if (downs.length) lines.push('<strong>' + downs.join('・') + '</strong> は縮んでいる側です。積んだ経験が消えるわけではありませんが、同じ形のままでは先が細くなります。');
+  if (!ups.length && !downs.length) lines.push('通ってきた領域は、いまのところ大きく動いていない場所です。');
+  box.appendChild(card('card', lines.join('<br>') +
+    '<span class="cap">この判断のもとになった数字は、下の「分野ごとの動き」に出しています。</span>'));
+
+  return box;
 }
 
 // ---------- 分野ごとの動き ----------
@@ -842,6 +977,21 @@ function trackCard(t, idx) {
       '<span class="cap">閉校・募集停止: ' + t.marketShrink.closures.join(' / ') + '</span>' +
       (t.marketShrink.teachers ? '<span class="cap">' + t.marketShrink.teachers.note + '</span>' : '');
     addSrc(t.marketShrink.source); addSrc(t.marketShrink.capacitySource);
+  }
+
+  // 年齢の上限がある選択肢は、答えてもらった年代で当てはまるかを出す
+  if (t.id === 'public-health' && A.ageBand && t.income) {
+    const me = AGE_BANDS.find(b => b.label === A.ageBand);
+    const judged = t.income.examples.filter(e => e.ageLimit !== undefined);
+    if (me && judged.length) {
+      html += '<p style="margin:.9rem 0 .2rem"><strong>' + A.ageBand + 'のあなたが受けられるか</strong></p>' +
+        '<ul class="plain">' + judged.map(e => {
+          const ok = e.ageLimit === null || me.ageForLimit <= e.ageLimit;
+          return '<li>' + e.org + '：<strong>' + (ok ? '対象に入る' : '上限を超えている') + '</strong></li>';
+        }).join('') + '</ul>' +
+        '<span class="cap">年代の上のほうの年齢で判定しています。募集ごとに条件が変わるので、' +
+        '実際の募集要項で確かめてください。</span>';
+    }
   }
 
   // 収入

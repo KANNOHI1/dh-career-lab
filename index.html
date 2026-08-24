@@ -171,6 +171,20 @@ details.card > summary::after {
 details.card[open] > summary::after { content: 'とじる −'; color: var(--muted); }
 details.card[open] > summary { border-bottom: 1px solid var(--line); padding-bottom: .7rem; }
 
+.fieldmap {
+  border: 1px solid var(--line); border-radius: .6rem; background: var(--card);
+  padding: .6rem .4rem; margin: 0 0 1rem;
+}
+.fieldmap svg { display: block; width: 100%; height: auto; }
+.maplegend { list-style: none; margin: .6rem 0 .2rem; padding: 0 .3rem; font-size: .82rem; }
+.maplegend li { margin: .3rem 0; display: flex; align-items: center; gap: .45rem; }
+.maplegend .n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.3rem; height: 1.3rem; border-radius: 50%; flex: none;
+  background: var(--accent); color: var(--bg); font-size: .72rem; font-weight: 700;
+}
+.maplegend .n.down { background: var(--warn); }
+
 .grouphead { margin: 1.6rem 0 .6rem; font-size: .9rem; }
 .grouphead strong { color: var(--accent); }
 
@@ -260,13 +274,13 @@ footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top:
 
 <!-- キャッシュ対策: スマホのブラウザが古い JS を保持するため、
      data/*.js か app.js を変更したら下の ?v= を必ず更新する -->
-<script src="data/market.js?v=20260824r"></script>
-<script src="data/certifications.js?v=20260824r"></script>
-<script src="data/salary.js?v=20260824r"></script>
-<script src="data/fields.js?v=20260824r"></script>
-<script src="data/supply.js?v=20260824r"></script>
-<script src="data/regions.js?v=20260824r"></script>
-<script src="data/tracks.js?v=20260824r"></script>
-<script src="app.js?v=20260824r"></script>
+<script src="data/market.js?v=20260824t"></script>
+<script src="data/certifications.js?v=20260824t"></script>
+<script src="data/salary.js?v=20260824t"></script>
+<script src="data/fields.js?v=20260824t"></script>
+<script src="data/supply.js?v=20260824t"></script>
+<script src="data/regions.js?v=20260824t"></script>
+<script src="data/tracks.js?v=20260824t"></script>
+<script src="app.js?v=20260824t"></script>
 </body>
 </html>

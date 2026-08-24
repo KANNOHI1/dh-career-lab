@@ -60,13 +60,13 @@ const TRACKS = [
     ],
     blocker: null,
     income: {
-      text: '例: 新発田市 31〜40歳の平均 492 万円',
+      text: '自治体によって年齢の上限がまったく違う',
       examples: [
-        // 2026-08-24 自治体の給与公表（総務省 地方公務員給与実態調査 等）での裏取りは未実施。
-      // 求人サイトの掲載値であることを画面にも出す。
-      { org: '新発田市（求人サイトの掲載値）', value: '30歳まで 391 万円 / 31〜40歳 492 万円。年齢制限なし（42歳の応募例あり）', source: 'https://public-connect.jp/job/15728' },
-        { org: '佐倉市', value: '経験者採用は保育士・歯科衛生士のみ 55 歳まで受験可（令和7年度末時点）', source: 'https://www.city.sakura.lg.jp/soshiki/jinjika/boshujoho/backnumber/20777.html' },
-        { org: '東京特別区', value: 'I類 22〜31歳 / 経験者採用は最大 59 歳以下', source: 'https://www.union.tokyo23city.lg.jp/jinji/jinjiiinkaitop/saiyoshiken/gaiyo.html' },
+        // 2026-08-24 新発田市の年収は削除した。北海道在住の人に新潟県の市の給与を出しても意味がない。
+      // 年齢制限の例としてだけ残す。地域ごとの賃金は都道府県別の一次データが取れていない。
+      { org: '新発田市', value: '年齢制限なしで募集した例がある（42歳の応募例）', source: 'https://koumu-in.jp/cat/forties', ageLimit: null },
+        { org: '佐倉市', value: '経験者採用は保育士・歯科衛生士のみ 55 歳まで受験可（令和7年度末時点）', source: 'https://www.city.sakura.lg.jp/soshiki/jinjika/boshujoho/backnumber/20777.html', ageLimit: 55 },
+        { org: '東京特別区', value: 'I類 22〜31歳 / 経験者採用は最大 59 歳以下', source: 'https://www.union.tokyo23city.lg.jp/jinji/jinjiiinkaitop/saiyoshiken/gaiyo.html', ageLimit: 59 },
       ],
     },
     tradeoffs: ['募集は自治体ごとの単発で、常時開いてはいない', '臨床の頻度は下がる'],

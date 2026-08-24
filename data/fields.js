@@ -20,6 +20,9 @@ const SRC_SHIKKAN_R6 = 'https://www.mhlw.go.jp/stf/newpage_59190.html';
 const SRC_JINKO = 'https://www.ipss.go.jp/pp-zenkoku/j/zenkoku2023/pp2023_gaiyou.pdf';
 //   E 厚生労働省「令和5年 医療施設（静態・動態）調査」表12・表18（実施している施設の数）
 const SRC_SEITAI = 'https://www.mhlw.go.jp/toukei/saikin/hw/iryosd/23/dl/02sisetu05.pdf';
+// 経年比較用（同じ調査の過去回）
+const SRC_SEITAI_H29 = 'https://www.mhlw.go.jp/toukei/saikin/hw/iryosd/17/dl/02sisetu29-3.pdf';
+const SRC_SEITAI_R02 = 'https://www.mhlw.go.jp/toukei/saikin/hw/iryosd/20/dl/02sisetu02.pdf';
 //   F 厚生労働省「令和6年 医師・歯科医師・薬剤師統計」（主たる診療科別の歯科医師数）
 const SRC_ISHI = 'https://www.mhlw.go.jp/toukei/saikin/hw/ishi/24/dl/R06_1gaikyo.pdf';
 //   G 厚生労働省「令和6年 薬事工業生産動態統計年報」第33表・第34表（歯科材料の生産金額）
@@ -121,13 +124,14 @@ const FIELDS_DEMAND = [
   {
     id: 'インプラント',
     direction: 'flat',
-    headline: '3軒に1軒がやっている。1施設あたり月1.5件',
-    body: 'インプラント手術をしている歯科診療所は、全国の 35.2% にあたる 23,503 施設。特別な医院だけがやる治療ではなくなっています。実施件数は1か月で 36,118 件、1施設あたり 1.5 件です。ただし自費なので、金額と推移は公的統計に出てきません。',
+    headline: '9年間ずっと3軒に1軒。伸びても縮んでもいない',
+    body: 'インプラント手術をしている歯科診療所は、全国の 35.2% にあたる 23,503 施設。3軒に1軒です。この割合は平成29年から9年間ほとんど変わっていません。伸びてもいないし縮んでもいない、落ち着いた領域です。実施件数は1か月で 36,118 件、1施設あたり 1.5 件。ただし自費なので金額は公的統計に出てきません。',
     evidence: [
       { label: 'インプラント手術を実施している歯科診療所', value: '23,503 施設（歯科診療所の 35.2%）', source: SRC_SEITAI },
       { label: '実施件数', value: '令和5年9月の1か月で 36,118 件。1施設あたり 1.5 件', source: SRC_SEITAI },
+      { label: '9年間の推移', value: '平成29年 24,014施設(35.0%) → 令和2年 24,027施設(35.4%) → 令和5年 23,503施設(35.2%)', source: SRC_SEITAI_H29 },
     ],
-    caution: '件数は令和5年9月の1か月分です。年間に引き伸ばした数字ではありません。金額も、増えているか減っているかも、公的統計には出てきません。',
+    caution: '9年間ほとんど動いていません。歯科診療所そのものが減っているので施設数はわずかに減りましたが、「3軒に1軒がやっている」という割合は変わっていない。件数は令和5年9月の1か月分で、年間に引き伸ばした数字ではありません。金額は公的統計に出てきません。',
   },
   {
     id: '審美',

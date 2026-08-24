@@ -14,6 +14,7 @@ const SRC_ISHI_PREF = 'https://www.mhlw.go.jp/toukei/saikin/hw/ishi/24/dl/R06_1g
 // 2026-08-24 e-Stat の API から都道府県別を取得（統計表 0004048426 / 0004048427 / 0004027006）
 const SRC_ESTAT_FACILITY = 'https://www.e-stat.go.jp/dbview?sid=0004048427';   // 令和6年 医療施設調査
 const SRC_ESTAT_DH = 'https://www.e-stat.go.jp/dbview?sid=0004027006';         // 令和2年 衛生行政報告例
+const SRC_ESTAT_WAGE = 'https://www.e-stat.go.jp/dbview?sid=0004007961';       // 令和5年 賃金構造基本統計調査
 
 // 注: app.js に都道府県名リストの REGIONS があるため、こちらは REGION_DATA とする
 const REGION_DATA = {
@@ -31,11 +32,15 @@ const REGION_DATA = {
       hygienistsPer100k: 125.0,     // 人口10万対（全国 113.2 より多い）
       newGradJobRatio: 18.3,        // 就職者に対する求人人数倍率（令和7年度）
       outflowRatio: 0.099,          // 県外へ就職した割合。県外からの入学は 0.9%
+      // 令和5年 賃金構造基本統計調査（一般労働者・男女計・歯科衛生士）
+      wage: { monthlyThousandYen: 265.9, bonusThousandYen: 324.8, hours: 163, overtime: 8,
+              age: 41.2, tenure: 5.9, workers: 870 },
       note: '2050年には5人に2人が65歳以上になります。訪問が必要になる75歳以上の割合は、2030年に 22.0%。' +
             'ただし歯科診療所の数は人口あたりで全国並み（53.5 / 全国 53.6）なのに、' +
             '歯科衛生士は人口あたりで全国より多い（125.0 / 全国 113.2）。' +
             '新卒の求人倍率も 18.3 倍と全国（23.1倍）より低く、卒業生の 9.9% が道外へ出ています。' +
-            '需要は先に来るけれど、働く人も多い場所です。',
+            'ただしこの「多い」は頭数の話で、常勤かパートかは区別されていません。' +
+            '常勤で働いた場合の給与は全国より低く、平均年齢は高く、勤続年数は短い。',
     },
     {
       name: '東京都',
@@ -48,10 +53,13 @@ const REGION_DATA = {
       hygienistsPer100k: 107.1,     // 人口10万対（全国 113.2 より少ない）
       newGradJobRatio: 25.7,        // 関東/甲信越地区の値（都道府県別の公表なし）
       newGradJobRatioNote: '関東/甲信越地区の値。都道府県ごとの公表はない',
+      wage: { monthlyThousandYen: 352.9, bonusThousandYen: 412.2, hours: 170, overtime: 16,
+              age: 40.2, tenure: 8.7, workers: 3980 },
       note: '高齢化は全国の中では遅い一方、人口あたりの歯科診療所は 74.8 で全国（53.6）の約1.4倍、' +
             '歯科医師も 116.9 で全国最多。医院は密集しています。' +
             'ところが歯科衛生士は人口あたり 107.1 と全国（113.2）より少ない。' +
-            '医院の数に対して働く人が足りていない側です。',
+            '医院の数に対して働く人が足りていない側です。' +
+            '常勤の給与は全国より高い一方、労働時間も残業も全国より長い。',
     },
   ],
 
@@ -59,6 +67,8 @@ const REGION_DATA = {
   newGradSource: 'https://www.kokuhoken.or.jp/zen-eiky/publicity/file/report_2026.pdf',
 
   nationalDH: { hygienists: 142760, per100k: 113.2, year: 2020, source: SRC_ESTAT_DH },
+  nationalWage: { monthlyThousandYen: 291.9, bonusThousandYen: 455.5, hours: 164, overtime: 8,
+                  age: 37.3, tenure: 7.6, workers: 43380, year: '令和5年', source: SRC_ESTAT_WAGE },
   nationalClinics: { clinics: 66378, per100k: 53.6, year: 2024, source: SRC_ESTAT_FACILITY },
 
   national: {
@@ -73,7 +83,7 @@ const REGION_DATA = {
     title: '同じ仕事でも、地域で見え方が変わる',
     body: '北海道と東京は、形がはっきり違います。' +
           '北海道は高齢化が10年以上早く進む一方、歯科衛生士が人口あたりで全国より多く、' +
-          '新卒の求人倍率は全国より低い。需要は先に来るけれど、働く人も多い。' +
+          '新卒の求人倍率は全国より低い。ただしこの人数は常勤とパートを区別しない頭数です。' +
           '東京は医院も歯科医師も密集していますが、歯科衛生士は人口あたりで全国より少ない。' +
           '医院の数に対して人が足りていません。' +
           '同じ「歯科衛生士として働く」でも、置かれている条件が違います。',

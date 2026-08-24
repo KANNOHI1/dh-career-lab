@@ -859,6 +859,23 @@ function supplySection() {
     '<span class="cap">' + N.note + '</span>' +
     '<p class="src">出典: ' + N.source + '</p>'));
 
+  // 頭数だけで「多い / 少ない」を語らない
+  const WL = S.workload;
+  box.appendChild(card('card flag',
+    '<span class="tag">働く量のちがい</span>' +
+    '<span class="tname">同じ 1 人でも、働く時間が違う</span>' +
+    '<ul class="plain">' +
+    '<li>' + WL.fullTime.label + '：月 <strong>' + WL.fullTime.monthlyHours + ' 時間</strong>' +
+      '（平均 ' + WL.fullTime.age + ' 歳・' + WL.fullTime.workers.toLocaleString() + ' 人）</li>' +
+    '<li>' + WL.partTime.label + '：月 <strong>' + WL.partTime.monthlyHours + ' 時間</strong>' +
+      '（' + WL.partTime.daysPerMonth + ' 日 × ' + WL.partTime.hoursPerDay + ' 時間／平均 ' +
+      WL.partTime.age + ' 歳・' + WL.partTime.workers.toLocaleString() + ' 人）</li>' +
+    '</ul>' +
+    '<p style="margin:.6rem 0 0">' + WL.conclusion + '</p>' +
+    '<span class="cap">' + WL.ratioNote + '</span>' +
+    '<p class="blk">' + WL.caveat + '</p>' +
+    '<p class="src">出典: ' + WL.fullTime.source + '<br>' + WL.partTime.source + '</p>'));
+
   S.readings.forEach(r => {
     box.appendChild(card('card',
       '<span class="tname">' + r.title + '</span>' +
@@ -908,6 +925,26 @@ function regionSection() {
         (a.newGradJobRatioNote ? '<span class="cap">※' + a.newGradJobRatioNote + '</span>' : '') + '</li>' +
         '</ul>' +
         '<span class="cap">歯科衛生士の数は令和2年、診療所と歯科医師は令和6年の調査です。</span>';
+    }
+
+    // 常勤で働いた場合の給与。地域差がいちばん出るところ
+    if (a.wage) {
+      const N = R.nationalWage;
+      // 千円単位 → 万円。(千円 × 12 + 賞与千円) ÷ 10 = 万円
+      const yr = w => Math.round((w.monthlyThousandYen * 12 + w.bonusThousandYen) / 10);
+      html += '<span class="cap">常勤で働いた場合（' + N.year + '・歯科衛生士）</span>' +
+        '<ul class="plain">' +
+        '<li>きまって支給される給与 <strong>' + a.wage.monthlyThousandYen + ' 千円/月</strong>' +
+          '（全国 ' + N.monthlyThousandYen + '）</li>' +
+        '<li>年間賞与 <strong>' + a.wage.bonusThousandYen + ' 千円</strong>（全国 ' + N.bonusThousandYen + '）</li>' +
+        '<li>所定内の労働時間 ' + a.wage.hours + ' 時間/月・残業 ' + a.wage.overtime + ' 時間（全国 ' +
+          N.hours + ' / ' + N.overtime + '）</li>' +
+        '<li>平均年齢 ' + a.wage.age + ' 歳・勤続 ' + a.wage.tenure + ' 年（全国 ' + N.age + ' / ' + N.tenure + '）</li>' +
+        '</ul>' +
+        '<span class="cap">年収に直すとおよそ <strong>' + yr(a.wage) + ' 万円</strong>' +
+        '（全国 ' + yr(N) + ' 万円）。給与×12 + 賞与で当サイトが計算しました。' +
+        'このページの別のところに出ている ' + man(SALARY.national.annualYen) +
+        ' は同じ調査の別の集計で、対象のとり方が違うため一致しません。</span>';
     }
 
     html += '<p style="margin:.6rem 0 0">' + a.note + '</p>';
@@ -1089,7 +1126,8 @@ function trackCard(t, idx) {
   [SUPPLY.clinics.source, SUPPLY.dentists.source, SUPPLY.hygienists.source, SUPPLY.newGrad.source,
    REGION_DATA.newGradSource,
    REGION_DATA.source, REGION_DATA.national.source,
-   REGION_DATA.nationalDH.source, REGION_DATA.nationalClinics.source].forEach(u => { if (u) srcs.add(u); });
+   REGION_DATA.nationalDH.source, REGION_DATA.nationalClinics.source,
+   REGION_DATA.nationalWage.source, SUPPLY.workload.fullTime.source, SUPPLY.workload.partTime.source].forEach(u => { if (u) srcs.add(u); });
   [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource, MARKET.ageDistributionSourceSecondary,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });
   $('#srccount').textContent = srcs.size;

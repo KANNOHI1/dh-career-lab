@@ -15,6 +15,10 @@ const SRC_DH = 'https://www.jdha.or.jp/aboutdh/shugyo.html';
 //   加盟185校・回収率100%。第1弾で「求人倍率23.3倍は一専門学校の調査」として棄却したが、
 //   協議会の全国調査で 23.1 倍と裏づけが取れたので採用する。
 const SRC_KYOGIKAI = 'https://www.kokuhoken.or.jp/zen-eiky/publicity/file/report_2026.pdf';
+//   厚生労働省「令和5年 賃金構造基本統計調査」e-Stat API 経由（職種: 歯科衛生士）
+//   一般労働者 統計表 0004007961 / 短時間労働者 統計表 0004008680
+const SRC_CHINGIN = 'https://www.e-stat.go.jp/dbview?sid=0004007961';
+const SRC_CHINGIN_PT = 'https://www.e-stat.go.jp/dbview?sid=0004008680';
 
 const SUPPLY = {
   // --- 歯科診療所（令和6年10月1日現在・活動中の施設）---
@@ -84,6 +88,43 @@ const SUPPLY = {
     note: '養成校を出た人 1 人に対して求人が 23.1 人分ある、という意味です。' +
           '新卒の話であって、経験者の転職市場の数字ではありません。',
     source: SRC_KYOGIKAI,
+  },
+
+  // --- 常勤とパートで働く量がどれくらい違うか ---
+  // 「歯科衛生士が多い」を頭数だけで語ると実態を外す。衛生行政報告例の就業者数は
+  // 常勤・非常勤を区別しない頭数なので、稼働量はこちらで見る。
+  workload: {
+    year: '令和5年',
+    fullTime: {
+      label: '常勤（一般労働者）',
+      workers: 43380,
+      age: 37.3,
+      tenureYears: 7.6,
+      monthlyHours: 164,           // 所定内実労働時間
+      overtimeHours: 8,
+      bonusThousandYen: 455.5,
+      source: SRC_CHINGIN,
+    },
+    partTime: {
+      label: 'パート（短時間労働者）',
+      workers: 29960,
+      age: 46.9,
+      tenureYears: 7.6,
+      daysPerMonth: 13.0,
+      hoursPerDay: 5.4,
+      monthlyHours: 70.2,          // 13.0 × 5.4。当サイトの計算
+      hourlyYen: 1703,
+      bonusThousandYen: 48.6,
+      source: SRC_CHINGIN_PT,
+    },
+    ratioNote: 'パートの人が働く時間は月 70 時間ほどで、常勤（164時間）の 4 割強です。' +
+               '月あたりの時間は「実労働日数 13.0 日 × 1日 5.4 時間」で当サイトが計算しました。',
+    caveat: '常勤の人数（統計表0004007961）とパートの人数（統計表0004008680）は、' +
+            '同じ調査ですが集計している事業所の条件が同じとは限りません。' +
+            '「何対何」と正確な比率を出すのではなく、どちらも相当な人数がいる、という程度に読んでください。',
+    conclusion: '就業歯科衛生士 149,579 人という数字は、常勤もパートも同じ 1 人として数えたものです。' +
+                'そのうち相当数が月 70 時間前後の働き方をしています。' +
+                '「人数が多い地域」を、そのまま「人手が足りている地域」とは読めません。',
   },
 
   // 画面に出す読み取り。事実の範囲を超えない書き方にする

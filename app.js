@@ -98,13 +98,122 @@ const STEPS = [
   },
 ];
 
+// ---------- 保存 ----------
+// この端末の中だけ。外へは出さない（fetch も XHR も使わない）。
+// スキーマを変えたら KEY の版番号を上げる。古い保存は読まずに捨てる。
+const SAVE_KEY = 'dh-career-lab/v1';
+
+function save() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ answers: A, step: cur }));
+  } catch (e) {
+    // プライベートブラウズや容量超過で書けないことがある。保存できなくても診断は続けられる
+  }
+}
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const d = JSON.parse(raw);
+    return d && d.answers && Object.keys(d.answers).length ? d : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function forget() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* 消せなくても実害はない */ }
+}
+
+// ---------- 導入ページ ----------
+function fillLanding() {
+  const M = MARKET, S = SALARY;
+  const b40 = S.byAgeBand.find(b => b.band === '40-44');
+  const b45 = S.byAgeBand.find(b => b.band === '45-49');
+  const set = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+
+  set('#l-employed', M.employedHygienists.toLocaleString());
+  set('#l-clinic', pct(M.workplaceBreakdown.clinic.ratio));
+  set('#l-latent', M.latentHygienists.toLocaleString());
+  set('#l-rate', pct(M.employmentRate));
+  set('#l-b40', man(b40.annualYen));
+  set('#l-b45', man(b45.annualYen));
+  set('#l-tracks', TRACKS.filter(t => t.confirmed).length);
+  set('#l-src', $('#srccount').textContent);
+}
+
+function revealOnScroll() {
+  const items = [...document.querySelectorAll('[data-r]')];
+  // ここまで来た＝JS が動いている。隠してよい
+  document.documentElement.classList.add('js');
+
+  // IntersectionObserver は、勢いよくスクロールして通り過ぎた要素を取りこぼすことがある。
+  // 隠れたまま残ると本文が読めないので、位置を直接見る。要素は数個なので負荷にならない。
+  const check = () => {
+    const h = window.innerHeight;
+    items.forEach(el => {
+      if (el.classList.contains('shown')) return;
+      if (el.getBoundingClientRect().top < h * 0.88) el.classList.add('shown');
+    });
+  };
+  check();
+  window.addEventListener('scroll', check, { passive: true });
+  window.addEventListener('resize', check);
+}
+
+let savingWired = false;
+
+function startSurvey(fromStep) {
+  if (!savingWired) {
+    // 子のハンドラが A を書き換えてから、ここへバブリングしてくる
+    $('#steps').addEventListener('input', save);
+    $('#steps').addEventListener('change', save);
+    savingWired = true;
+  }
+  cur = fromStep || 0;
+  $('#landing').hidden = true;
+  $('#progress').hidden = false;
+  $('#steps').hidden = false;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function backToLanding() {
+  $('#landing').hidden = false;
+  $('#progress').hidden = true;
+  $('#steps').hidden = true;
+  window.scrollTo(0, 0);
+}
+
+function initLanding() {
+  fillLanding();
+  revealOnScroll();
+  $('#start-top').onclick = () => startSurvey(0);
+  $('#start-bottom').onclick = () => startSurvey(0);
+
+  const saved = loadSaved();
+  if (!saved) return;
+
+  // 前回の回答があるときだけ出す
+  $('#resume-box').hidden = false;
+  $('#resume').onclick = () => {
+    Object.assign(A, saved.answers);
+    startSurvey(saved.step);
+  };
+  $('#forget').onclick = () => {
+    forget();
+    Object.keys(A).forEach(k => delete A[k]);
+    $('#resume-box').hidden = true;
+  };
+}
+
 // ---------- レンダリング ----------
 let cur = 0;
 
 function render(keepScroll) {
   const y = keepScroll ? window.scrollY : 0;
-  // 前置きは最初の画面でだけ意味がある。2ステップ目以降は設問に場所を渡す
-  $('#preamble').style.display = cur === 0 ? '' : 'none';
+  save();
   const prog = $('#progress');
   prog.innerHTML = STEPS.map((_, i) =>
     '<span class="' + (i <= cur ? 'done' : '') + '"></span>').join('') +
@@ -124,12 +233,15 @@ function render(keepScroll) {
 
   const nav = document.createElement('div');
   nav.className = 'nav';
-  if (cur > 0) nav.innerHTML = '<button class="ghost" id="back">戻る</button>';
+  nav.innerHTML = '<button class="ghost" id="back">戻る</button>';
   nav.innerHTML += '<button id="next">' + (cur === STEPS.length - 1 ? '結果を見る' : '次へ') + '</button>';
   el.appendChild(nav);
   host.appendChild(el);
 
-  if ($('#back')) $('#back').onclick = () => { cur--; render(); };
+  $('#back').onclick = () => {
+    if (cur === 0) { backToLanding(); return; }
+    cur--; render();
+  };
   $('#next').onclick = () => { cur++; render(); };
   window.scrollTo(0, y);
 }
@@ -177,6 +289,7 @@ function field(q) {
         const clear = () => {
           inp.checked = false;
           A[q.id] = null;
+          save();
           if (REDRAW_ON.includes(q.id)) render(true);
         };
         inp.onclick = () => {
@@ -458,6 +571,22 @@ function result() {
   back.onclick = () => { cur = STEPS.length - 1; render(); };
   nav.appendChild(back);
   w.appendChild(nav);
+
+  // 回答はこの端末に残る。消す手段を本人の手元に置いておく
+  const wipe = document.createElement('p');
+  wipe.innerHTML = '<span class="cap">回答はこの端末の中だけに残っています。' +
+    '次に開いたとき、続きから見られます。</span>';
+  const btn = document.createElement('button');
+  btn.className = 'linkbtn'; btn.type = 'button'; btn.textContent = 'この端末から回答を消す';
+  btn.onclick = () => {
+    forget();
+    Object.keys(A).forEach(k => delete A[k]);
+    backToLanding();
+    $('#resume-box').hidden = true;
+  };
+  wipe.appendChild(document.createElement('br'));
+  wipe.appendChild(btn);
+  w.appendChild(wipe);
   return w;
 }
 
@@ -602,7 +731,6 @@ function trackCard(t, idx) {
   [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });
   $('#srccount').textContent = srcs.size;
-  $('#introN').textContent = MARKET.employedHygienists.toLocaleString();
 })();
 
-render();
+initLanding();

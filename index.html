@@ -25,6 +25,7 @@
   --accent-soft: #16403c; --warn: #e0b070;
 }
 * { box-sizing: border-box; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 body {
   margin: 0; padding: 1.5rem 1.1rem 5rem;
   background: var(--bg); color: var(--fg);
@@ -37,19 +38,53 @@ h2 { font-size: 1.1rem; margin: 0 0 .3rem; }
 h3 { font-size: .95rem; margin: 2rem 0 .6rem; color: var(--muted); font-weight: 600; }
 .sub { color: var(--fg); font-size: .9rem; margin: .15rem 0 .6rem; }
 
-.intro { margin: 0 0 1.3rem; font-size: .82rem; color: var(--muted); }
-.intro > summary {
-  cursor: pointer; list-style: none; color: var(--accent);
-  font-weight: 600; padding: .25rem 0;
+/* ---- 導入ページ ---- */
+#landing { padding: 0 0 3rem; }
+#landing .hero {
+  min-height: 78vh; display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start;
 }
-.intro > summary::-webkit-details-marker { display: none; }
-.intro > summary::after { content: ' ＋'; }
-.intro[open] > summary::after { content: ' −'; }
-.intro ul.plain { margin: .5rem 0 0; }
-.intro li { margin: .35rem 0; }
+#landing .lead { font-size: 1rem; color: var(--muted); margin: .5rem 0 2rem; }
+#landing .kicker {
+  font-size: .75rem; letter-spacing: .12em; font-weight: 700;
+  color: var(--accent); margin: 0 0 .2rem;
+}
+#landing .num {
+  font-size: clamp(2rem, 11vw, 2.9rem); font-weight: 700;
+  line-height: 1.15; margin: 0 0 .7rem; letter-spacing: -.01em;
+}
+#landing .num.pair { font-size: clamp(1.5rem, 7.5vw, 2.1rem); }
+#landing .reveal { padding: 3.2rem 0; border-top: 1px solid var(--line); }
+#landing .reveal p:last-of-type { margin: 0; color: var(--muted); }
+#landing .closing p:first-child { color: var(--fg); }
+#landing .mini { font-size: .82rem; }
 
-.privacy { font-size: .82rem; color: var(--muted); margin: 0 0 .55rem; }
-.privacy strong { color: var(--fg); font-weight: 600; }
+.scroll-hint {
+  font-size: .8rem; color: var(--muted); margin: 2.5rem 0 0;
+  display: flex; align-items: center; gap: .4rem;
+}
+.scroll-hint .arrow { display: inline-block; animation: nudge 1.8s ease-in-out infinite; }
+@keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+
+button.cta {
+  font-size: 1rem; padding: .85rem 2rem; min-height: 48px;
+  border-radius: .5rem; margin: 1.2rem 0 0;
+}
+button.ghost-cta { background: transparent; color: var(--accent); }
+button.linkbtn {
+  background: none; border: none; color: var(--muted); text-decoration: underline;
+  font-weight: 400; font-size: .82rem; padding: .6rem .2rem; min-height: 44px;
+}
+#resume-box { margin: 2rem 0 0; padding: 1rem 0 0; border-top: 1px dashed var(--line); }
+
+/* スクロールで現れる。隠すのは JS が動いているときだけ。
+   JS が失敗しても本文が読めなくなってはいけない */
+.js [data-r] { opacity: 0; transform: translateY(14px); transition: opacity .5s ease, transform .5s ease; }
+.js [data-r].shown { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .js [data-r] { opacity: 1; transform: none; transition: none; }
+  .scroll-hint .arrow { animation: none; }
+}
 
 .progress { display: flex; gap: .3rem; margin: 0 0 1.5rem; }
 .progress span {
@@ -147,24 +182,57 @@ footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top:
 </head>
 <body>
 <main>
-  <h1>歯科衛生士キャリアラボ</h1>
+  <!-- 導入。ここを読み終えてから「はじめる」でアンケートに入る。
+       数値はすべて data/*.js から app.js が埋める。HTML に直書きしない。 -->
+  <section id="landing">
+    <div class="hero">
+      <h1>歯科衛生士キャリアラボ</h1>
+      <p class="lead">これまでやってきたことを、事実として並べ直します。</p>
+      <button type="button" class="cta" id="start-top">はじめる</button>
+      <p class="scroll-hint" aria-hidden="true">読んでから決める<span class="arrow">↓</span></p>
+    </div>
 
-  <div id="preamble">
-    <p class="sub">答えると、この先に進める道と、それぞれに必要なもの、収入が出ます。</p>
-    <p class="privacy"><strong>回答は自動送信されません。公開も検索もされません。</strong></p>
-    <details class="intro">
-      <summary>この診断について</summary>
-      <ul class="plain">
-        <li>厚生労働省の統計と、実際に出ている求人から作っています。数字にはすべて出典つき</li>
-        <li>全国 <span id="introN">—</span> 人の歯科衛生士の中で、いまどこに位置するかが出ます</li>
-        <li>答えたくない項目は空欄のまま進めます。選んだあと、もう一度押せば取り消せます</li>
-        <li>5ステップ・3分ほど。途中でやめても大丈夫です</li>
-      </ul>
-    </details>
-  </div>
+    <div class="reveal" data-r>
+      <p class="kicker">いま</p>
+      <p class="num"><span id="l-employed">—</span> 人</p>
+      <p>日本で働いている歯科衛生士の数です。そのうち <span id="l-clinic">—</span> が診療所にいます。</p>
+    </div>
 
-  <div class="progress" id="progress"></div>
-  <div id="steps"></div>
+    <div class="reveal" data-r>
+      <p class="kicker">その一方で</p>
+      <p class="num"><span id="l-latent">—</span> 人</p>
+      <p>免許を持っているのに、いま働いていない人の数です。就業率は <span id="l-rate">—</span>。
+         続けている人のほうが少ない。</p>
+    </div>
+
+    <div class="reveal" data-r>
+      <p class="kicker">年収</p>
+      <p class="num pair"><span id="l-b40">—</span> → <span id="l-b45">—</span></p>
+      <p>40代の後半にかけて上がります。45〜49歳が、全年齢でいちばん高い。</p>
+    </div>
+
+    <div class="reveal" data-r>
+      <p class="kicker">この先</p>
+      <p class="num"><span id="l-tracks">—</span> 本</p>
+      <p>進める道を調べました。それぞれ何が必要で、収入がどう変わって、
+         今日できることが何かまで出します。</p>
+    </div>
+
+    <div class="reveal closing" data-r>
+      <p><strong>回答は自動送信されません。公開も検索もされません。</strong></p>
+      <p class="mini">5ステップ・3分ほど。答えたくない項目は空欄のまま進めます。
+         数字には <span id="l-src">—</span> 件すべてに出典をつけています。</p>
+      <button type="button" class="cta" id="start-bottom">はじめる</button>
+      <div id="resume-box" hidden>
+        <p class="mini">この端末に前回の回答が残っています。</p>
+        <button type="button" class="cta ghost-cta" id="resume">前回の続きから</button>
+        <button type="button" class="linkbtn" id="forget">保存を消す</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="progress" id="progress" hidden></div>
+  <div id="steps" hidden></div>
 
   <footer>
     出典つきの統計は <span id="srccount">—</span> 件。数値の根拠は結果画面に併記しています。
@@ -173,10 +241,10 @@ footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top:
 
 <!-- キャッシュ対策: スマホのブラウザが古い JS を保持するため、
      data/*.js か app.js を変更したら下の ?v= を必ず更新する -->
-<script src="data/market.js?v=20260824c"></script>
-<script src="data/certifications.js?v=20260824c"></script>
-<script src="data/salary.js?v=20260824c"></script>
-<script src="data/tracks.js?v=20260824c"></script>
-<script src="app.js?v=20260824c"></script>
+<script src="data/market.js?v=20260824e"></script>
+<script src="data/certifications.js?v=20260824e"></script>
+<script src="data/salary.js?v=20260824e"></script>
+<script src="data/tracks.js?v=20260824e"></script>
+<script src="app.js?v=20260824e"></script>
 </body>
 </html>

@@ -540,7 +540,10 @@ function result() {
       '<p class="src">' + S.curveCaveat + '<br>出典: ' + S.sourceName + ' / ' + S.source + '</p>'));
   }
 
-  // 8. この先の選択肢
+  // 8. 分野ごとの動き（市場の側から見た材料）
+  w.appendChild(fieldSection());
+
+  // 9. この先の選択肢
   const h = document.createElement('h3');
   h.textContent = 'この先の選択肢';
   w.appendChild(h);
@@ -553,7 +556,7 @@ function result() {
   w.appendChild(lead);
   rankedTracks().forEach((t, i) => w.appendChild(trackCard(t, i)));
 
-  // 9. 書いてくれた工夫
+  // 10. 書いてくれた工夫
   const notes = [
     ['左利きでの工夫', A.leftHand],
     ['ブランクからの戻り方', A.comeback],
@@ -593,6 +596,69 @@ function result() {
   wipe.appendChild(btn);
   w.appendChild(wipe);
   return w;
+}
+
+// ---------- 分野ごとの動き ----------
+// 自分が通った領域だけでなく全分野を出す。
+// 「市場がこっちへ動くなら自分もそっちへ」という判断ができるようにするため。
+const DIRECTION_ORDER = { up: 0, flat: 1, unknown: 2, down: 3 };
+
+function fieldSection() {
+  const mine = A.fields || [];
+  const box = document.createElement('div');
+
+  const h = document.createElement('h3');
+  h.textContent = '分野ごとの動き';
+  box.appendChild(h);
+
+  const lead = document.createElement('p');
+  lead.className = 'hint';
+  lead.innerHTML = '厚生労働省の統計だけで、どの分野が伸びていてどの分野が縮んでいるかを並べています。' +
+    (mine.length ? '<strong>あなたが通ってきた領域</strong>には印をつけています。' : '');
+  box.appendChild(lead);
+
+  const sorted = FIELDS_DEMAND.slice().sort((a, b) => {
+    // 自分が通った領域を先に、そのあとは伸びている順
+    const am = mine.indexOf(a.id) >= 0 ? 0 : 1;
+    const bm = mine.indexOf(b.id) >= 0 ? 0 : 1;
+    if (am !== bm) return am - bm;
+    return DIRECTION_ORDER[a.direction] - DIRECTION_ORDER[b.direction];
+  });
+
+  sorted.forEach((f, i) => {
+    const isMine = mine.indexOf(f.id) >= 0;
+    const srcs = [];
+    let html = '<span class="tag dir-' + f.direction + '">' + DIRECTION_LABEL[f.direction] + '</span>' +
+      (isMine ? '<span class="tag mine">通ってきた領域</span>' : '') +
+      '<span class="tname">' + f.id + '</span>' +
+      '<span class="cap">' + f.headline + '</span>' +
+      '<p style="margin:.8rem 0 0">' + f.body + '</p>';
+
+    if (f.evidence.length) {
+      html += '<ul class="plain">' + f.evidence.map(e => {
+        if (e.source && srcs.indexOf(e.source) < 0) srcs.push(e.source);
+        return '<li>' + e.label + '：<strong>' + e.value + '</strong></li>';
+      }).join('') + '</ul>';
+    }
+    if (f.caution) {
+      html += '<p class="blk">' + f.caution + '</p>';
+    }
+    if (srcs.length) {
+      html += '<p class="src">出典: ' + srcs.join('<br>') + '</p>';
+    }
+
+    const d = document.createElement('details');
+    d.className = 'card' + (isMine ? ' flag' : '');
+    d.open = i < 2;
+    d.innerHTML = '<summary>' + html.slice(0, html.indexOf('<p style=')) + '</summary>' +
+      html.slice(html.indexOf('<p style='));
+    box.appendChild(d);
+  });
+
+  box.appendChild(card('unknown',
+    FIELD_CAVEAT.shinryoNote + '<br><br>' + FIELD_CAVEAT.jihiNote));
+
+  return box;
 }
 
 // ---------- この先の選択肢 ----------
@@ -733,6 +799,7 @@ function trackCard(t, idx) {
       (t.marketShrink ? [t.marketShrink.source, t.marketShrink.capacitySource] : [])
     ).forEach(u => { if (u) srcs.add(u); });
   });
+  FIELDS_DEMAND.forEach(f => f.evidence.forEach(e => { if (e.source) srcs.add(e.source); }));
   [MARKET.source, MARKET.sourceSecondary, MARKET.leftHandedSource, MARKET.ageDistributionSource, MARKET.ageDistributionSourceSecondary,
    SALARY.source, SALARY.byRegionSource, CERTIFICATION_CAVEAT.source].forEach(s => { if (s) srcs.add(s); });
   $('#srccount').textContent = srcs.size;

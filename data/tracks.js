@@ -11,6 +11,12 @@ const TRACKS = [
     id: 'corporate',
     group: 'outside',
     field: null,
+    requires: { years: 1, on: 'total', note: '臨床経験1〜3年以上（企業により異なる）' },
+    actions: [
+      { when: '今月', text: '松風・ナカニシ・モリタ・Ivoclar Vivadent の採用ページを開き、歯科衛生士資格を要件にした職種がいま出ているかを見る。', url: 'https://shofu-recruit.jp/' },
+      { when: '半年〜1年', text: '募集が出ていなければ時期を控えて待つ。ナカニシのセミナー運営職は勤務地が東京、週末中心に月2〜3回の出張がある。土日祝の出勤と出張を受けられるかを先に決めておく。', url: 'https://www.nakanishi-inc-recruitment.jp/mid-career/sales/' },
+      { when: '1〜3年', text: '条件の合う求人が出た年に応募する。普通自動車免許と PC スキルが要件に入る。年間休日は 120〜127 日で、医院勤務とは働き方そのものが変わる。', url: null },
+    ],
     firstStep: '松風・ナカニシ・モリタ・Ivoclar Vivadent の採用ページを開く。歯科衛生士資格を要件にした職種があることは確認済み。募集が出ているかは時期による。',
     name: '企業内歯科衛生士（メーカー・材料商社）',
     short: '企業内',
@@ -52,6 +58,11 @@ const TRACKS = [
     id: 'public-health',
     group: 'outside',
     field: null,
+    actions: [
+      { when: '今月', text: 'お住まいの自治体の職員採用ページを開き、歯科衛生士枠の募集時期と年齢の上限を控える。', url: null },
+      { when: '半年〜1年', text: '志望先の試験が教養試験か SPI かを確認して、その形式で準備する。教養試験を廃止して SPI に切り替える自治体が増えている。', url: null },
+      { when: '枠が出た年', text: '受験する。枠が毎年出るとは限らない。年齢上限は自治体でばらつきがあり、経験者採用で 55 歳・59 歳まで受けられる例がある。', url: null },
+    ],
     firstStep: '通える範囲の自治体の採用情報を見て、歯科衛生士枠の募集時期と年齢の上限を控えておく。枠が毎年出るとは限らないので、出たときに動けるようにしておく。',
     name: '行政・公衆衛生（自治体職員）',
     short: '行政',
@@ -88,6 +99,11 @@ const TRACKS = [
     id: 'home-visit',
     group: 'clinical',
     field: '訪問',
+    actions: [
+      { when: '今月', text: '通える範囲で訪問診療をしている医院・法人の求人を見る。運転できるかどうかで条件が大きく変わる。', url: null },
+      { when: '半年〜1年', text: '訪問に移ったら、日本歯科衛生士会の認定（在宅療養指導・口腔機能管理）の要件を確認する。実務3年以上と研修単位。', url: 'https://www.jdha.or.jp/learning/ninteidh.html' },
+      { when: '2〜3年', text: '単位をそろえて認定を申請する。民間の訪問研修（受講料 22,000〜35,000円）もあるが、こちらは学会・職能団体の認定ではない。', url: null },
+    ],
     firstStep: '訪問診療をしている医院・法人の求人を見る。運転できるかどうかで条件が変わる。',
     name: '訪問歯科診療',
     short: '訪問',
@@ -123,6 +139,11 @@ const TRACKS = [
     id: 'instructor',
     group: 'outside',
     field: null,
+    actions: [
+      { when: '今月', text: 'いま通っている領域の学会をひとつ選び、認定歯科衛生士の要件ページを開く。実務3年以上を要件にしているものが多い。', url: null },
+      { when: '1〜3年', text: 'その学会の認定を取る。教える側に立っている人は、まず学会認定から入っている。', url: null },
+      { when: '3年〜', text: '学会発表・口演を重ねる。商業誌に書く人、大学院に進む人もいる。順番はここまで来てからでいい。', url: null },
+    ],
     firstStep: 'いま通っている領域の学会をひとつ選んで、認定歯科衛生士の要件を調べる。実務3年以上を要件にしているものが多い。',
     name: '指導する側に回る（学会認定 + 発表・執筆）',
     short: '指導',
@@ -158,6 +179,12 @@ const TRACKS = [
     id: 'care-manager',
     group: 'outside',
     field: null,
+    requires: { years: 5, on: 'total', note: '対人援助業務の通算5年以上（別に従事日数900日以上の要件がある）' },
+    actions: [
+      { when: '今月', text: '従事日数が900日を超えているか、勤務先の在籍証明でたどれるかを確認する。', url: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000054119.html' },
+      { when: '次の試験 10月', text: '介護支援専門員実務研修受講試験に申し込む。試験は年1回、受験手数料は約 12,400円。申込の時期は都道府県ごとに違う。', url: 'https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000054119.html' },
+      { when: '合格の半年後', text: '実務研修 87時間以上（期間の目安6ヶ月以上）を修了する。ここを終えて初めてケアマネとして働ける。', url: null },
+    ],
     firstStep: '介護支援専門員実務研修受講試験の受験資格を、自分の従事日数で確認する（通算5年以上かつ900日以上）。',
     name: 'ケアマネジャー（介護支援専門員）',
     short: 'ケアマネ',
@@ -191,6 +218,11 @@ const TRACKS = [
     id: 'education',
     group: 'outside',
     field: null,
+    requires: { years: 4, on: 'total', note: '歯科衛生士免許取得後4年以上の業務従事経験' },
+    actions: [
+      { when: '今月', text: '通える範囲の歯科衛生士養成校の求人を見る。専任教員講習会の申込は教育施設が出すので、採用されるほうが先。', url: null },
+      { when: '採用後', text: '専任教員講習会 I〜V を受ける。1講習 25,000円・5日間連続の集合研修。', url: null },
+    ],
     firstStep: '個人で始められる一歩はない。講習会の申込は教育施設が出す。',
     name: '歯科衛生士学校の専任教員',
     short: '養成校教員',
@@ -275,6 +307,11 @@ const TRACKS = [
     source: 'https://www.perio.jp/member/certification/hygienist/',
     fetchedAt: '2026-08-24',
     confirmed: true,
+    actions: [
+      { when: '今月', text: '学会の「申請資格チェックシート」を開いて、いまの自分に何が足りないかを確認する。', url: 'https://www.perio.jp/member/certification/hygienist/application_new.shtml' },
+      { when: '半年〜1年', text: '日本歯周病学会に入会し（正会員・準会員どちらでも可）、担当している患者さんの症例を様式1〜8にそって記録し始める。全顎エックス線写真が要る。', url: 'https://www.perio.jp/admisson/' },
+      { when: '次の申請 6月 か 10〜11月', text: '症例をそろえて申請する。登録料 22,000円。書類審査のあとケースプレゼンテーション試験。', url: 'https://www.perio.jp/member/certification/hygienist/application_new.shtml' },
+    ],
     firstStep: '日本歯周病学会の認定歯科衛生士のページで、申請資格チェックシートを開く。いまの自分に何が足りないかがその場で分かる。',
   },
   {
@@ -304,6 +341,12 @@ const TRACKS = [
     source: 'https://www.jaao.jp/index.php/doctor-and-co-dental/doctor_eiseishi_02/',
     fetchedAt: '2026-08-24',
     confirmed: true,
+    requires: { years: 3, on: 'field', note: '学会が認める矯正歯科専門医療機関等で常勤3年以上の継続した矯正歯科臨床' },
+    actions: [
+      { when: '今月', text: 'いまの職場で矯正をどれくらい扱っているか数える。学会が認める矯正歯科専門医療機関等での臨床でないと、年数に入らない。', url: null },
+      { when: '半年〜1年', text: '日本成人矯正歯科学会に入会し、学会・研修会に参加する。会員であることと学会等への参加が要件に入っている。', url: 'https://www.jaao.jp/index.php/doctor-and-co-dental/doctor_nyuukai/' },
+      { when: '3年〜', text: '常勤3年の矯正臨床がそろったら、認定矯正歯科衛生士（2級）を申請する。累計でも約140名と狭い門。', url: 'https://www.jaao.jp/index.php/doctor-and-co-dental/doctor_eiseishi_02/' },
+    ],
     firstStep: 'いまの職場で矯正をどれくらい扱っているか数えてみる。認定の要件は「常勤3年以上の継続した矯正歯科臨床」なので、そこが起点になる。',
   },
   {
@@ -330,6 +373,11 @@ const TRACKS = [
     source: 'https://www.shika-implant.org/certification/hygienist/',
     fetchedAt: '2026-08-24',
     confirmed: true,
+    actions: [
+      { when: '今月', text: 'いまの職場がインプラントをやっているか、年に何件あるかを確認する。全国平均は1施設あたり月1.5件。介助かメインテナンスに携わっていることが要件になる。', url: null },
+      { when: '半年〜1年', text: '日本口腔インプラント学会に入会する。申請できるのは正会員歴2年以上なので、入会した日が起点になる。', url: 'https://www.shika-implant.org/certification/hygienist/' },
+      { when: '2年〜', text: '正会員歴2年を満たしたら、インプラント専門歯科衛生士試験を受ける。', url: 'https://www.shika-implant.org/certification/hygienist/' },
+    ],
     firstStep: 'いまの職場がインプラントをやっているかを確認する。やっていなければ、まず学会に入って正会員歴を積むところから（要件は会員歴2年以上）。',
   },
   {
@@ -356,6 +404,11 @@ const TRACKS = [
     source: 'https://www.jspd.or.jp/dentist_system/about/',
     fetchedAt: '2026-08-24',
     confirmed: true,
+    actions: [
+      { when: '今月', text: '日本小児歯科学会の認定制度のページで、審査の中身を読む。口腔内写真と PCR などの数値記録が要る。', url: 'https://www.jspd.or.jp/dentist_system/about/' },
+      { when: '半年〜1年', text: '担当した子どもの口腔内写真と数値記録を残し始める。う蝕予防だけでなく、食生活指導・栄養指導も審査の対象。', url: null },
+      { when: '2〜3年', text: '症例資料をそろえて申請する。ただし削る仕事は減っていく領域。予防と食生活の指導に軸を移せるかを見ながら進める。', url: 'https://www.jspd.or.jp/dentist_system/about/' },
+    ],
     firstStep: '縮んでいく市場だと分かったうえで選ぶかどうか。まず日本小児歯科学会の認定歯科衛生士制度のページを読んで、審査の中身を見る。',
   },
   {
@@ -384,6 +437,12 @@ const TRACKS = [
     source: 'https://www.jdha.or.jp/learning/ninteidh.html',
     fetchedAt: '2026-08-24',
     confirmed: true,
+    requires: { years: 3, on: 'total', note: '歯科衛生士の業務経験3年以上（うちその分野の実務1年以上）' },
+    actions: [
+      { when: '今月', text: '日本歯科衛生士会の認定6分野から、自分の実務にいちばん近いものを1つ選ぶ。', url: 'https://www.jdha.or.jp/learning/ninteidh.html' },
+      { when: '半年〜1年', text: '生涯研修制度の専門研修を受け始める。2コース・30単位以上が要件。実習をともなう研修では歯科衛生士賠償責任保険への加入が要る。', url: 'https://www.jdha.or.jp/learning/' },
+      { when: '1〜2年', text: '30単位がそろったら認定を申請する。転職も職場を変えることも要らない道。', url: 'https://www.jdha.or.jp/learning/ninteidh.html' },
+    ],
     firstStep: '日本歯科衛生士会の認定歯科衛生士のページで、6分野のうち自分の実務に近いものを1つ選ぶ。要件は業務経験3年以上とその分野の実務1年以上。',
   },
 

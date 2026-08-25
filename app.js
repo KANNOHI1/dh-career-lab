@@ -457,13 +457,13 @@ function result() {
   const fmap = fieldMap();
   if (fmap) w.appendChild(fmap);
 
-  // いちばん上の選択肢の「最初の一歩」を1つだけ、ここで見せる
+  // いちばん上の選択肢を、今月・半年・数年の順に開く
   const firstTop = top[0];
-  if (firstTop && firstTop.firstStep) {
+  if (firstTop && firstTop.actions) {
     w.appendChild(card('card flag',
-      '<span class="tag">今日できること</span>' +
+      '<span class="tag">ここから何をするか</span>' +
       '<span class="tname">' + firstTop.name + '</span>' +
-      '<p style="margin:.5rem 0 0">' + firstTop.firstStep + '</p>' +
+      planLead(firstTop) + actionPlan(firstTop) +
       '<span class="cap">ほかの選択肢とその根拠は、この下に出しています。</span>'));
   }
 
@@ -1048,6 +1048,43 @@ const VERDICT_LABEL = {
   'not-recommended': '調べた結果、すすめない',
 };
 
+// ---------- ここから何をするか ----------
+// 要件を「年数」として持っているものは、答えてもらった年数と突き合わせる。
+// 15年やってきた人に「まず3年経験を積みましょう」と出さないため。
+function yearsVerdict(t) {
+  if (!t.requires) return '';
+  const r = t.requires;
+  const have = r.on === 'field' ? ((A.fieldYears || {})[t.field] || 0) : A.years;
+  if (have == null) return r.note + ' が要件です。';
+  const label = r.on === 'field' ? t.field + ' ' + have + ' 年' : '実務 ' + have + ' 年';
+  return have >= r.years
+    ? label + '。' + r.note + '。<strong>ここはもう終わっています。</strong>'
+    : label + '。' + r.note + 'なので、あと ' + (r.years - have) + ' 年です。';
+}
+
+// 見出しは呼ぶ側で出す（第1段はタグ、選択肢カードは小見出し）
+function actionPlan(t) {
+  if (!t.actions || !t.actions.length) return '';
+  let h = '';
+  const v = yearsVerdict(t);
+  if (v) h += '<p class="planyear">' + v + '</p>';
+  h += '<ol class="plan">' + t.actions.map(a =>
+    '<li><span class="when">' + a.when + '</span>' + a.text +
+    (a.url ? '<a class="planlink" href="' + a.url + '" target="_blank" rel="noopener">公式ページを開く</a>' : '') +
+    '</li>').join('') + '</ol>';
+  return h;
+}
+
+// 答えてもらった内容と行動をつなぐ。第1段でだけ出す。
+function planLead(t) {
+  const bits = [];
+  if (A.future) bits.push('3年後に「' + A.future + '」とお答えでした。そこへ向かうと、こうなります。');
+  if (t.field && (A.fields || []).indexOf(t.field) < 0) {
+    bits.push('いまの職場で' + t.field + 'を扱っていないなら、最初の一歩は認定ではなく職場に確認することです。');
+  }
+  return bits.length ? '<p class="planlead">' + bits.join(' ') + '</p>' : '';
+}
+
 function trackCard(t, idx) {
   const srcs = [];
   const addSrc = u => { if (u && srcs.indexOf(u) < 0) srcs.push(u); };
@@ -1115,17 +1152,6 @@ function trackCard(t, idx) {
     '<ul class="plain">' + t.entryRequirements.map(r => '<li>' + r + '</li>').join('') + '</ul>';
 
   // 年数の要件を満たしているかは、答えた年数から出す
-  if (t.id === 'education' && A.years >= 4) {
-    html += '<span class="cap">実務 ' + A.years + ' 年で、法令上の 4 年は満たしています。' +
-      '足りていないのは年数ではありませんでした。</span>';
-  }
-  if (t.id === 'corporate' && A.years >= 3) {
-    html += '<span class="cap">実務 ' + A.years + ' 年。どの企業の募集要件も超えています。</span>';
-  }
-  if (t.id === 'care-manager' && A.years != null) {
-    html += '<span class="cap">実務 ' + A.years + ' 年。' +
-      (A.years >= 5 ? '受験要件の 5 年は満たしています。' : '受験要件は 5 年以上です。') + '</span>';
-  }
 
   // 動かせない条件に触れるものだけ出す
   const hit = (A.constraints || []).filter(c => t.cautions && t.cautions[c]);
@@ -1137,8 +1163,10 @@ function trackCard(t, idx) {
   html += '<p style="margin:.9rem 0 .2rem"><strong>引き換えになるもの</strong></p>' +
     '<ul class="plain">' + t.tradeoffs.map(r => '<li>' + r + '</li>').join('') + '</ul>';
 
-  // 読んで終わりにしない。今日できることを1行だけ置く。
-  if (t.firstStep) {
+  // 読んで終わりにしない。今月・半年・数年の順に置く。
+  if (t.actions && t.actions.length) {
+    html += '<p style="margin:.9rem 0 .2rem"><strong>ここから何をするか</strong></p>' + actionPlan(t);
+  } else if (t.firstStep) {
     html += '<p class="step1"><strong>最初の一歩</strong><br>' + t.firstStep + '</p>';
   }
 
@@ -1162,7 +1190,8 @@ function trackCard(t, idx) {
     [t.source].concat(
       (t.income ? t.income.examples.map(e => e.source) : []),
       (t.examples ? t.examples.map(e => e.source) : []),
-      (t.marketShrink ? [t.marketShrink.source, t.marketShrink.capacitySource] : [])
+      (t.marketShrink ? [t.marketShrink.source, t.marketShrink.capacitySource] : []),
+      (t.actions ? t.actions.map(a => a.url) : [])
     ).forEach(u => { if (u) srcs.add(u); });
   });
   FIELDS_DEMAND.forEach(f => f.evidence.forEach(e => { if (e.source) srcs.add(e.source); }));

@@ -217,6 +217,32 @@ details.sect[open] > summary { border-bottom: 1px solid var(--line); }
   font-size: .875rem;
 }
 
+/* ここから何をするか（今月 → 半年 → 数年の縦タイムライン） */
+.planlead { margin: .6rem 0 .2rem; font-size: .875rem; }
+.planyear { margin: .5rem 0 .2rem; font-size: .85rem; color: var(--muted); }
+.planyear strong { color: var(--accent); }
+ol.plan {
+  list-style: none; margin: .6rem 0 0; padding: 0 0 0 1.1rem;
+  border-left: 2px solid var(--line);
+}
+ol.plan li {
+  position: relative; margin: 0 0 .9rem; font-size: .875rem; line-height: 1.65;
+}
+ol.plan li:last-child { margin-bottom: 0; }
+ol.plan li::before {
+  content: ''; position: absolute; left: -1.45rem; top: .45rem;
+  width: .5rem; height: .5rem; border-radius: 50%;
+  background: var(--accent);
+}
+ol.plan .when {
+  display: block; font-size: .75rem; font-weight: 700;
+  color: var(--accent); letter-spacing: .02em;
+}
+a.planlink {
+  display: block; margin: .35rem 0 0; font-size: .8rem;
+  color: var(--accent); text-decoration: underline; text-underline-offset: 2px;
+}
+
 .tag.dir-up { border-color: var(--accent); color: var(--accent); }
 .tag.dir-down { border-color: var(--warn); color: var(--warn); }
 .tag.mine { background: var(--accent-soft); color: var(--fg); border-color: var(--accent); }
@@ -297,13 +323,13 @@ footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top:
 
 <!-- キャッシュ対策: スマホのブラウザが古い JS を保持するため、
      data/*.js か app.js を変更したら下の ?v= を必ず更新する -->
-<script src="data/market.js?v=20260824x"></script>
-<script src="data/certifications.js?v=20260824x"></script>
-<script src="data/salary.js?v=20260824x"></script>
-<script src="data/fields.js?v=20260824x"></script>
-<script src="data/supply.js?v=20260824x"></script>
-<script src="data/regions.js?v=20260824x"></script>
-<script src="data/tracks.js?v=20260824x"></script>
-<script src="app.js?v=20260824x"></script>
+<script src="data/market.js?v=20260825a"></script>
+<script src="data/certifications.js?v=20260825a"></script>
+<script src="data/salary.js?v=20260825a"></script>
+<script src="data/fields.js?v=20260825a"></script>
+<script src="data/supply.js?v=20260825a"></script>
+<script src="data/regions.js?v=20260825a"></script>
+<script src="data/tracks.js?v=20260825a"></script>
+<script src="app.js?v=20260825a"></script>
 </body>
 </html>

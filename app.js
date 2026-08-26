@@ -683,8 +683,12 @@ function result() {
 // 自分が通ってきた領域を、市場の方向の上に置く。
 // 「自分の経験が伸びる場所に乗っているか」を最初に見せるための図。
 // 合成指標（総合力・偏差値のようなもの）は作らない。軸はどちらも実データ。
-const MAP_X = { down: 1, unknown: 2, flat: 3, up: 4 };
-const MAP_X_LABEL = ['へっている', '数字なし', '横ばい', 'ふえている'];
+// 「数字なし」は方向の一種ではないので、独立した列にすると軸の順序が壊れる
+// （減 → 数字なし → 横ばい → 増 と並び、数字なしが減と横ばいの中間に見える）。
+// 横ばいと同じ列に置き、丸を白抜きにして「方向を示す数字がない」ことだけ分けて伝える。
+const MAP_X = { down: 1, unknown: 2, flat: 2, up: 3 };
+const MAP_X_LABEL = ['へっている', '横ばい', 'ふえている'];
+const MAP_COLS = 3;
 // 図の中では長い分野名が入りきらない。図の中だけ短くする
 const MAP_SHORT = { '予防・メインテナンス': '予防', 'インプラント': 'インプラ' };
 
@@ -699,7 +703,7 @@ function fieldMap() {
   const W = 320, H = 260;
   const padL = 34, padR = 14, padT = 16, padB = 44;
   const plotW = W - padL - padR, plotH = H - padT - padB;
-  const xAt = d => padL + (MAP_X[d] - 0.5) * (plotW / 4);
+  const xAt = d => padL + (MAP_X[d] - 0.5) * (plotW / MAP_COLS);
   const yAt = y => padT + plotH - (Math.min(y || 0, maxYears) / maxYears) * plotH;
 
   let g = '';
@@ -715,11 +719,11 @@ function fieldMap() {
 
   // 横の区切りとラベル
   MAP_X_LABEL.forEach((lab, i) => {
-    const cx = padL + (i + 0.5) * (plotW / 4);
+    const cx = padL + (i + 0.5) * (plotW / MAP_COLS);
     g += '<text x="' + cx + '" y="' + (H - padB + 16) + '" text-anchor="middle" ' +
          'font-size="9" fill="var(--muted)">' + lab + '</text>';
     if (i > 0) {
-      const bx = padL + i * (plotW / 4);
+      const bx = padL + i * (plotW / MAP_COLS);
       g += '<line x1="' + bx + '" y1="' + padT + '" x2="' + bx + '" y2="' + (padT + plotH) +
            '" stroke="var(--line)" stroke-width="1" stroke-dasharray="2 3"/>';
     }
@@ -743,9 +747,12 @@ function fieldMap() {
     while (placed.some(p => Math.abs(p.x - cx) < 20 && Math.abs(p.y - cy) < 16)) { cx += 21; }
     placed.push({ x: cx, y: cy });
     const color = d.direction === 'down' ? 'var(--warn)' : 'var(--accent)';
-    g += '<circle cx="' + cx + '" cy="' + cy + '" r="10" fill="' + color + '" fill-opacity="0.9"/>' +
+    const blank = d.direction === 'unknown';   // 方向を示す数字がない分野は白抜き
+    g += '<circle cx="' + cx + '" cy="' + cy + '" r="10" fill="' +
+         (blank ? 'var(--bg)' : color) + '" fill-opacity="' + (blank ? '1' : '0.9') +
+         '" stroke="' + color + '" stroke-width="' + (blank ? '1.5' : '0') + '"/>' +
          '<text x="' + cx + '" y="' + (cy + 3.5) + '" text-anchor="middle" font-size="10" ' +
-         'font-weight="700" fill="var(--bg)">' + (i + 1) + '</text>';
+         'font-weight="700" fill="' + (blank ? color : 'var(--bg)') + '">' + (i + 1) + '</text>';
     legend.push({ n: i + 1, name: f, yrs: yrs, dir: d.direction });
   });
 
@@ -757,7 +764,9 @@ function fieldMap() {
   const lead = document.createElement('p');
   lead.className = 'hint';
   lead.textContent = '横は市場がどっちに動いているか、縦はあなたがその領域にいた年数です。' +
-    '薄い点は、通っていない分野の位置です。';
+    '薄い点は、通っていない分野の位置。' +
+    (mine.some(f => (FIELDS_DEMAND.find(x => x.id === f) || {}).direction === 'unknown')
+      ? '白抜きの丸は、市場の方向を示す数字がない分野です（横ばいと同じ列に置いています）。' : '');
   box.appendChild(lead);
 
   const wrap = document.createElement('div');
@@ -765,7 +774,8 @@ function fieldMap() {
   wrap.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" ' +
     'aria-label="通ってきた領域を市場の方向と経験年数で並べた図">' + g + '</svg>' +
     '<ul class="maplegend">' + legend.map(l =>
-      '<li><span class="n' + (l.dir === 'down' ? ' down' : '') + '">' + l.n + '</span>' +
+      '<li><span class="n' + (l.dir === 'down' ? ' down' : '') +
+      (l.dir === 'unknown' ? ' blank' : '') + '">' + l.n + '</span>' +
       l.name + (l.yrs ? ' ' + l.yrs + '年' : '') +
       '<span class="cap">（' + DIRECTION_LABEL[l.dir] + '）</span></li>').join('') + '</ul>';
   box.appendChild(wrap);
@@ -1055,11 +1065,13 @@ function yearsVerdict(t) {
   if (!t.requires) return '';
   const r = t.requires;
   const have = r.on === 'field' ? ((A.fieldYears || {})[t.field] || 0) : A.years;
-  if (have == null) return r.note + ' が要件です。';
-  const label = r.on === 'field' ? t.field + ' ' + have + ' 年' : '実務 ' + have + ' 年';
-  return have >= r.years
-    ? label + '。' + r.note + '。<strong>ここはもう終わっています。</strong>'
-    : label + '。' + r.note + 'なので、あと ' + (r.years - have) + ' 年です。';
+  const mine = r.on === 'field' ? t.field + ' ' + have + ' 年' : '実務 ' + have + ' 年';
+  const head = have == null
+    ? '未回答'
+    : (have >= r.years ? '満たしています' : 'あと ' + (r.years - have) + ' 年');
+  return '<strong>年数の条件：' + head + '</strong>' +
+    '<span class="cap">' + (have == null ? '' : mine + ' / ') +
+    '要件は' + r.note + '</span>';
 }
 
 // 見出しは呼ぶ側で出す（第1段はタグ、選択肢カードは小見出し）

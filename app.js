@@ -432,45 +432,22 @@ function result() {
   const ranked = rankedTracks();
 
   // ================= 第1段: あなたはいまここ =================
-  const top = ranked.filter(t => t.verdict !== 'not-recommended').slice(0, 2);
-  const nope = ranked.filter(t => t.verdict === 'not-recommended');
+  // 同じ道の名前が「まとめ」「行動計画」「選択肢カード」の3箇所に出ていて、
+  // どれが本体なのか分からなかった。名前を出すのは下のランキング1箇所だけにする。
   const bits = [];
   if (A.years) bits.push('実務 <strong>' + A.years + ' 年</strong>');
   if ((A.fields || []).length) bits.push('通ってきた領域 <strong>' + A.fields.length + ' つ</strong>');
   if (facts.length) bits.push('まわりが実際に頼った記録 <strong>' + facts.length + ' 件</strong>');
-  if (bits.length || top.length) {
-    let h = '<span class="tag">まとめ</span>';
-    if (bits.length) h += '<p style="margin:.2rem 0 .8rem">' + bits.join(' / ') + '</p>';
-    if (top.length) {
-      h += '<p style="margin:.6rem 0 .2rem"><strong>いま条件が合っているもの</strong></p>' +
-        '<ul class="plain">' + top.map(t => {
-          const p = matchPct(t);
-          return '<li>' + t.name + (p == null ? '' : '<span class="match">マッチ度 ' + p + '%</span>') + '</li>';
-        }).join('') + '</ul>';
-    }
-    // 教える側に興味がないと答えた人に、教員を「すすめない」と伝えても情報にならない
-    const careAboutTeaching = A.teachInterest !== 'ない' || A.future === '教える・伝える側にまわる';
-    if (nope.length && careAboutTeaching) {
-      h += '<p style="margin:.6rem 0 .2rem"><strong>調べた結果、すすめないもの</strong></p>' +
-        '<ul class="plain">' + nope.map(t => '<li>' + t.name + '</li>').join('') + '</ul>';
-    }
-    w.appendChild(card('card flag', h));
+  if (bits.length) {
+    w.appendChild(card('card flag',
+      '<span class="tag">まとめ</span>' +
+      '<p style="margin:.2rem 0 0">' + bits.join(' / ') + '</p>'));
   }
 
   const fmap = fieldMap();
   if (fmap) w.appendChild(fmap);
 
-  // いちばん上の選択肢を、今月・半年・数年の順に開く
-  const firstTop = top[0];
-  if (firstTop && firstTop.actions) {
-    w.appendChild(card('card flag',
-      '<span class="tag">ここから何をするか</span>' +
-      '<span class="tname">' + firstTop.name + '</span>' +
-      planLead(firstTop) + actionPlan(firstTop) +
-      '<span class="cap">ほかの選択肢とその根拠は、この下に出しています。</span>'));
-  }
-
-  // ================= 第2段: この先の選択肢 =================
+  // ================= 第2段: この先の選択肢（マッチ度順の一覧） =================
   const h = document.createElement('h3');
   h.textContent = 'この先の選択肢';
   w.appendChild(h);
@@ -479,38 +456,17 @@ function result() {
   lead.innerHTML = !matchReady()
     ? '要件と収入を確認できたものだけを出しています。' +
       'マッチ度は<strong>「通った診療領域」と「大事な順」の2問に答えると出ます</strong>。' +
-      'いまは答えていただいた範囲だけで並べています。'
-    : '要件と収入を確認できたものだけを出しています。' +
-    '<strong>マッチ度の高い順</strong>に並べました。' +
-    'マッチ度は、答えていただいた内容が「その道が求めるもの」をどれだけ満たしているかで、' +
-    '<strong>当サイトの計算</strong>です。市場の統計ではありません。' +
-    '答えていない設問は計算に入れていません。何がどう効いたかは、各カードを開くと出ます。';
+      'いまは答えていただいた範囲だけで並べています。タップすると中身が出ます。'
+    : '<strong>マッチ度の高い順</strong>に全部並べました。' +
+      'タップすると、その道の中身と、今月から何をするかが出ます。' +
+      '<span class="cap">マッチ度は、答えていただいた内容が「その道が求めるもの」を' +
+      'どれだけ満たしているかを当サイトが計算したものです。市場の統計ではありません。' +
+      '答えていない設問は計算に入れていません。何がどう効いたかは各カードの中に出しています。</span>';
   w.appendChild(lead);
 
-  // 「いまの仕事を続けたまま深める」と「外に出る」を分ける。
-  // 混ぜると、転職しない選択肢が見えなくなる。
-  // 各群で上位2つだけ出し、残りは「ほかを見る」の中へ入れる。
-  const groups = [
-    { key: 'clinical', title: '臨床を続けたまま深める', note: '職場を変えずに進める道です。' },
-    { key: 'outside', title: '臨床の外に出る', note: '働く場所そのものを変える道です。' },
-  ];
-  const SHOW_PER_GROUP = 3;
-  groups.forEach(g => {
-    const list = ranked.filter(t => (t.group || 'outside') === g.key);
-    if (!list.length) return;
-    const gh = document.createElement('p');
-    gh.className = 'grouphead';
-    gh.innerHTML = '<strong>' + g.title + '</strong>　<span class="cap">' + g.note + '</span>';
-    w.appendChild(gh);
-    list.slice(0, SHOW_PER_GROUP).forEach((t, i) => w.appendChild(trackCard(t, i)));
-    const rest = list.slice(SHOW_PER_GROUP);
-    if (rest.length) {
-      w.appendChild(foldSection(
-        'ほかの' + rest.length + 'つを見る',
-        rest.map(t => t.short || t.name).join('・'),
-        () => rest.map((t, i) => trackCard(t, i + SHOW_PER_GROUP))));
-    }
-  });
+  // 群で分けず、順位が一目で並ぶ形にする。
+  // 転職が要るかどうかは各行のタグ（臨床のまま / 外に出る）で残す。
+  ranked.forEach((t, i) => w.appendChild(trackCard(t, i)));
 
   // ================= 第3段: 数字の裏側 =================
   const h2 = document.createElement('h3');
@@ -1094,11 +1050,10 @@ function matchPct(t) {
 function rankedTracks() {
   const list = TRACKS.filter(t => t.confirmed);
   matchFull = Math.max(1, ...list.map(matchMax));
-  return list.sort((a, b) => {
-    const an = a.verdict === 'not-recommended', bn = b.verdict === 'not-recommended';
-    if (an !== bn) return an ? 1 : -1;
-    return matchScore(b) - matchScore(a);
-  });
+  // 並び順はマッチ度だけで決める。「すすめない」を最後に回すと、
+  // 順位の数字とマッチ度の並びが食い違って壊れて見える。
+  // その道自体の評価はカードのタグで伝える（合うかどうかとは別の話）。
+  return list.sort((a, b) => matchScore(b) - matchScore(a));
 }
 
 const VERDICT_LABEL = {
@@ -1167,9 +1122,13 @@ function trackCard(t, idx) {
   const srcs = [];
   const addSrc = u => { if (u && srcs.indexOf(u) < 0) srcs.push(u); };
 
+  // 閉じたままでも順位・マッチ度・転職が要るかどうかが読めるようにする。
+  // タグを増やすと 390px で折り返すので、「条件が合う」は出さない（高いマッチ度が同じことを言う）。
   const pctMatch = matchPct(t);
-  const head = '<span class="tag">' + VERDICT_LABEL[t.verdict] + '</span>' +
+  const head = '<span class="rank">' + (idx + 1) + '</span>' +
     (pctMatch == null ? '' : '<span class="match">マッチ度 ' + pctMatch + '%</span>') +
+    '<span class="tag">' + (t.group === 'clinical' ? '臨床のまま' : '外に出る') + '</span>' +
+    (t.verdict === 'recommend' ? '' : '<span class="tag warn">' + VERDICT_LABEL[t.verdict] + '</span>') +
     '<span class="tname">' + t.name + '</span>' +
     '<span class="cap">' + t.summary + '</span>';
 
@@ -1249,7 +1208,8 @@ function trackCard(t, idx) {
 
   // 読んで終わりにしない。今月・半年・数年の順に置く。
   if (t.actions && t.actions.length) {
-    html += '<p style="margin:.9rem 0 .2rem"><strong>ここから何をするか</strong></p>' + actionPlan(t);
+    html += '<p style="margin:.9rem 0 .2rem"><strong>ここから何をするか</strong></p>' +
+      planLead(t) + actionPlan(t);
   } else if (t.firstStep) {
     html += '<p class="step1"><strong>最初の一歩</strong><br>' + t.firstStep + '</p>';
   }

@@ -857,7 +857,7 @@ function fieldSection() {
 
     const d = document.createElement('details');
     d.className = 'card' + (isMine ? ' flag' : '');
-    d.open = i < 2;
+    d.open = false;                      // 既定は全部たたむ（HK 2026-08-28）
     d.innerHTML = '<summary>' + html.slice(0, html.indexOf('<p style=')) + '</summary>' +
       html.slice(html.indexOf('<p style='));
     box.appendChild(d);
@@ -1188,7 +1188,7 @@ function trackCard(t, idx) {
   // 全部を開いたままにすると縦に長くなりすぎて読まれない。各群の先頭だけ開く。
   const d = document.createElement('details');
   d.className = 'card' + (t.verdict === 'not-recommended' ? '' : ' flag');
-  d.open = idx < 1;
+  d.open = false;                     // 既定は全部たたむ（HK 2026-08-28）
   d.innerHTML = '<summary>' + head + '</summary>' + html;
   return d;
 }

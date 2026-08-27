@@ -250,6 +250,26 @@ a.planlink {
   color: var(--accent); text-decoration: underline; text-underline-offset: 2px;
 }
 
+/* マッチ度のバッジ */
+.match {
+  display: inline-block; margin: 0 0 0 .4rem; padding: .1rem .45rem;
+  border-radius: .8rem; background: var(--accent-soft); color: var(--accent);
+  font-size: .72rem; font-weight: 700; white-space: nowrap;
+}
+.plain li > .match { margin-left: .35rem; }
+
+/* なぜこの順番なのか（マッチ度の内訳） */
+.why {
+  margin: .8rem 0 0; padding: .7rem .85rem;
+  border-radius: .4rem; background: var(--accent-soft);
+}
+.why .whyhead { margin: 0 0 .2rem; font-size: .82rem; }
+.why .whyhead:not(:first-child) { margin-top: .7rem; }
+.why ul { list-style: none; padding-left: .1rem; margin: 0; font-size: .82rem; }
+.why ul.hit li::before { content: '✓ '; color: var(--accent); font-weight: 700; }
+.why ul.miss li { color: var(--muted); }
+.why ul.miss li::before { content: '– '; }
+
 .tag.dir-up { border-color: var(--accent); color: var(--accent); }
 .tag.dir-down { border-color: var(--warn); color: var(--warn); }
 .tag.mine { background: var(--accent-soft); color: var(--fg); border-color: var(--accent); }
@@ -330,13 +350,13 @@ footer { margin: 3.5rem 0 0; font-size: .78rem; color: var(--muted); border-top:
 
 <!-- キャッシュ対策: スマホのブラウザが古い JS を保持するため、
      data/*.js か app.js を変更したら下の ?v= を必ず更新する -->
-<script src="data/market.js?v=20260828a"></script>
-<script src="data/certifications.js?v=20260828a"></script>
-<script src="data/salary.js?v=20260828a"></script>
-<script src="data/fields.js?v=20260828a"></script>
-<script src="data/supply.js?v=20260828a"></script>
-<script src="data/regions.js?v=20260828a"></script>
-<script src="data/tracks.js?v=20260828a"></script>
-<script src="app.js?v=20260828a"></script>
+<script src="data/market.js?v=20260828b"></script>
+<script src="data/certifications.js?v=20260828b"></script>
+<script src="data/salary.js?v=20260828b"></script>
+<script src="data/fields.js?v=20260828b"></script>
+<script src="data/supply.js?v=20260828b"></script>
+<script src="data/regions.js?v=20260828b"></script>
+<script src="data/tracks.js?v=20260828b"></script>
+<script src="app.js?v=20260828b"></script>
 </body>
 </html>

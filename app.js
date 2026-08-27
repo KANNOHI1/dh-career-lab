@@ -443,7 +443,10 @@ function result() {
     if (bits.length) h += '<p style="margin:.2rem 0 .8rem">' + bits.join(' / ') + '</p>';
     if (top.length) {
       h += '<p style="margin:.6rem 0 .2rem"><strong>いま条件が合っているもの</strong></p>' +
-        '<ul class="plain">' + top.map(t => '<li>' + t.name + '</li>').join('') + '</ul>';
+        '<ul class="plain">' + top.map(t => {
+          const p = matchPct(t);
+          return '<li>' + t.name + (p == null ? '' : '<span class="match">マッチ度 ' + p + '%</span>') + '</li>';
+        }).join('') + '</ul>';
     }
     // 教える側に興味がないと答えた人に、教員を「すすめない」と伝えても情報にならない
     const careAboutTeaching = A.teachInterest !== 'ない' || A.future === '教える・伝える側にまわる';
@@ -473,10 +476,15 @@ function result() {
   w.appendChild(h);
   const lead = document.createElement('p');
   lead.className = 'hint';
-  lead.innerHTML = '要件と収入を確認できたものだけを出しています。' +
-    '「大事な順」に選んでいただいた ' +
-    ((A.priority || []).length ? '<strong>' + A.priority.join('・') + '</strong>' : 'もの') +
-    ' と照らして並べています。';
+  lead.innerHTML = !matchReady()
+    ? '要件と収入を確認できたものだけを出しています。' +
+      'マッチ度は<strong>「通った診療領域」と「大事な順」の2問に答えると出ます</strong>。' +
+      'いまは答えていただいた範囲だけで並べています。'
+    : '要件と収入を確認できたものだけを出しています。' +
+    '<strong>マッチ度の高い順</strong>に並べました。' +
+    'マッチ度は、答えていただいた内容が「その道が求めるもの」をどれだけ満たしているかで、' +
+    '<strong>当サイトの計算</strong>です。市場の統計ではありません。' +
+    '答えていない設問は計算に入れていません。何がどう効いたかは、各カードを開くと出ます。';
   w.appendChild(lead);
 
   // 「いまの仕事を続けたまま深める」と「外に出る」を分ける。
@@ -486,7 +494,7 @@ function result() {
     { key: 'clinical', title: '臨床を続けたまま深める', note: '職場を変えずに進める道です。' },
     { key: 'outside', title: '臨床の外に出る', note: '働く場所そのものを変える道です。' },
   ];
-  const SHOW_PER_GROUP = 2;
+  const SHOW_PER_GROUP = 3;
   groups.forEach(g => {
     const list = ranked.filter(t => (t.group || 'outside') === g.key);
     if (!list.length) return;
@@ -1017,38 +1025,79 @@ function regionSection() {
 // ---------- この先の選択肢 ----------
 // 並べ替えの根拠は「大事な順」と、これまでの回答の事実だけ。
 // 調べた結果すすめないと分かったものは、隠さず最後に置く。
-function trackScore(t) {
-  let s = 0;
-  (A.priority || []).forEach(p => { if (t.fitFor.indexOf(p) >= 0) s += 2; });
-  // 通ってきた領域は、そのまま深められる。いちばん近い選択肢として上に出す
-  if (t.field && (A.fields || []).indexOf(t.field) >= 0) s += 4;
-  // 縮んでいる分野は、通っていても上位に置かない
+// ---------- マッチ度 ----------
+// 答えていただいた内容が、その道が求めるものをどれだけ満たしているか。
+// **市場の統計ではなく当サイトの計算**なので、数字だけを出さず必ず内訳とセットで見せる。
+// 答えていない設問は分子にも分母にも入れない（未回答が不利にならないようにする）。
+function matchReasons(t) {
+  const R = [];
+  const add = (pts, hit, label) => R.push({ pts: pts, hit: !!hit, label: label });
+  const fields = A.fields || [];
+
   if (t.field) {
+    if (fields.length) add(4, fields.indexOf(t.field) >= 0, '「' + t.field + '」を通ってきた');
     const f = FIELDS_DEMAND.find(x => x.id === t.field);
-    if (f && f.direction === 'down') s -= 3;
+    if (f) add(3, f.direction !== 'down', '市場が縮んでいない分野');
+  }
+  if ((A.priority || []).length) {
+    t.fitFor.forEach(p => add(2, A.priority.indexOf(p) >= 0, '大事な順で「' + p + '」を選んだ'));
+  }
+  if (t.requires) {
+    const r = t.requires;
+    const have = r.on === 'field' ? ((A.fieldYears || {})[t.field] || 0) : A.years;
+    if (have != null) add(3, have >= r.years, '年数の条件を満たしている');
   }
   if (t.id === 'instructor') {
-    if (A.teachInterest === 'すごくある') s += 4;
-    else if (A.teachInterest === '少しある') s += 2;
-    if (A.future === '専門を深める' || A.future === '教える・伝える側にまわる') s += 2;
-    if (A.taught === 'ある') s += 2;
+    if (A.teachInterest) {
+      add(4, A.teachInterest === 'すごくある' || A.teachInterest === '少しある',
+          '人に教えることに興味がある');
+    }
+    if (A.taught) add(2, A.taught === 'ある', '新人・後輩の教育を任されたことがある');
+    if (A.future) {
+      add(2, A.future === '専門を深める' || A.future === '教える・伝える側にまわる',
+          '3年後の希望と向きが合う');
+    }
   }
   if (t.id === 'corporate') {
-    if (A.represent === 'ある') s += 2;
-    if (A.introduced === 'ある' || A.chooseKit === 'ある') s += 1;
-    if (A.future === '職種を変える') s += 2;
+    if (A.represent) add(2, A.represent === 'ある', '学会・展示会に医院の代表として行った');
+    if (A.chooseKit || A.introduced) {
+      add(1, A.chooseKit === 'ある' || A.introduced === 'ある',
+          '器材の選定や新しい技術の導入に関わった');
+    }
+    if (A.future) add(2, A.future === '職種を変える', '3年後の希望と向きが合う');
   }
-  if (t.id === 'public-health' && (A.future === '今のまま安定' || A.future === '職種を変える')) s += 1;
-  if ((t.id === 'home-visit' || t.id === 'care-manager') && (A.fields || []).indexOf('訪問') >= 0) s += 3;
-  if (t.id === 'care-manager' && Number(A.years) < 5) s -= 3;   // 受験要件に届かない
-  return s;
+  if (t.id === 'public-health' && A.future) {
+    add(1, A.future === '今のまま安定' || A.future === '職種を変える', '3年後の希望と向きが合う');
+  }
+  if ((t.id === 'home-visit' || t.id === 'care-manager') && fields.length) {
+    add(3, fields.indexOf('訪問') >= 0, '訪問を通ってきた');
+  }
+  return R;
+}
+
+const matchScore = t => matchReasons(t).reduce((n, r) => n + (r.hit ? r.pts : 0), 0);
+const matchMax   = t => matchReasons(t).reduce((n, r) => n + r.pts, 0);
+
+// 分母は「その回答でいちばん条件の多い道の満点」。固定の魔法の数を置かないためにこうする。
+// 並び順（素点）とマッチ度（素点 ÷ 同じ分母）は同じ順序になる。
+let matchFull = 0;
+
+// マッチ度は「通った診療領域」と「大事な順」の2問にほぼ乗っている。
+// そこが空のまま数字を出すと、何も分かっていないのに評価したように見える。出さない。
+const matchReady = () => (A.fields || []).length > 0 && (A.priority || []).length > 0;
+
+function matchPct(t) {
+  if (!matchReady() || !matchFull) return null;
+  return Math.round(matchScore(t) / matchFull * 100);
 }
 
 function rankedTracks() {
-  return TRACKS.filter(t => t.confirmed).sort((a, b) => {
+  const list = TRACKS.filter(t => t.confirmed);
+  matchFull = Math.max(1, ...list.map(matchMax));
+  return list.sort((a, b) => {
     const an = a.verdict === 'not-recommended', bn = b.verdict === 'not-recommended';
     if (an !== bn) return an ? 1 : -1;
-    return trackScore(b) - trackScore(a);
+    return matchScore(b) - matchScore(a);
   });
 }
 
@@ -1097,15 +1146,38 @@ function planLead(t) {
   return bits.length ? '<p class="planlead">' + bits.join(' ') + '</p>' : '';
 }
 
+// マッチ度の内訳。数字だけを出さないための相方。
+function matchBreakdown(t) {
+  const R = matchReasons(t);
+  if (!R.length) return '';
+  const hit = R.filter(r => r.hit), miss = R.filter(r => !r.hit);
+  let h = '<div class="why">';
+  if (hit.length) {
+    h += '<p class="whyhead"><strong>あなたのこの答えが効いています</strong></p>' +
+      '<ul class="plain hit">' + hit.map(r => '<li>' + r.label + '</li>').join('') + '</ul>';
+  }
+  if (miss.length) {
+    h += '<p class="whyhead"><strong>' + (hit.length ? '満たしていないもの' : 'この道が求めるもの') +
+      '</strong></p><ul class="plain miss">' + miss.map(r => '<li>' + r.label + '</li>').join('') + '</ul>';
+  }
+  return h + '</div>';
+}
+
 function trackCard(t, idx) {
   const srcs = [];
   const addSrc = u => { if (u && srcs.indexOf(u) < 0) srcs.push(u); };
 
+  const pctMatch = matchPct(t);
   const head = '<span class="tag">' + VERDICT_LABEL[t.verdict] + '</span>' +
+    (pctMatch == null ? '' : '<span class="match">マッチ度 ' + pctMatch + '%</span>') +
     '<span class="tname">' + t.name + '</span>' +
     '<span class="cap">' + t.summary + '</span>';
 
-  let html = '<p style="margin:.8rem 0 0">' + t.reality + '</p>';
+  // なぜこの順番なのかを、カードを開いた最初に置く。
+  // 順位だけ出して根拠を出さないと、並んでいる意味が伝わらない。
+  let html = matchBreakdown(t);
+
+  html += '<p style="margin:.8rem 0 0">' + t.reality + '</p>';
 
   if (t.blocker) {
     html += '<p class="blk">' + t.blocker + '</p>';

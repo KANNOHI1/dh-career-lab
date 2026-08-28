@@ -1003,13 +1003,17 @@ function matchReasons(t) {
     const have = r.on === 'field' ? ((A.fieldYears || {})[t.field] || 0) : A.years;
     if (have != null) add(3, have >= r.years, '年数の条件を満たしている');
   }
+  // 「わからない」は miss ではなく未回答と同じ扱いで、分子にも分母にも入れない。
+  // 自信がない人ほど「わからない」を選ぶ。それを 0 点にすると、
+  // 「自己評価を聞かない」という設問設計と採点が食い違う。
+  const futureKnown = A.future && A.future !== 'わからない';
   if (t.id === 'instructor') {
-    if (A.teachInterest) {
+    if (A.teachInterest && A.teachInterest !== 'わからない') {
       add(4, A.teachInterest === 'すごくある' || A.teachInterest === '少しある',
           '人に教えることに興味がある');
     }
     if (A.taught) add(2, A.taught === 'ある', '新人・後輩の教育を任されたことがある');
-    if (A.future) {
+    if (futureKnown) {
       add(2, A.future === '専門を深める' || A.future === '教える・伝える側にまわる',
           '3年後の希望と向きが合う');
     }
@@ -1020,9 +1024,9 @@ function matchReasons(t) {
       add(1, A.chooseKit === 'ある' || A.introduced === 'ある',
           '器材の選定や新しい技術の導入に関わった');
     }
-    if (A.future) add(2, A.future === '職種を変える', '3年後の希望と向きが合う');
+    if (futureKnown) add(2, A.future === '職種を変える', '3年後の希望と向きが合う');
   }
-  if (t.id === 'public-health' && A.future) {
+  if (t.id === 'public-health' && futureKnown) {
     add(1, A.future === '今のまま安定' || A.future === '職種を変える', '3年後の希望と向きが合う');
   }
   if ((t.id === 'home-visit' || t.id === 'care-manager') && fields.length) {
@@ -1094,7 +1098,12 @@ function actionPlan(t) {
 // 答えてもらった内容と行動をつなぐ。第1段でだけ出す。
 function planLead(t) {
   const bits = [];
-  if (A.future) bits.push('3年後に「' + A.future + '」とお答えでした。そこへ向かうと、こうなります。');
+  // 「そこへ向かうと」が成り立つのは方向のある回答だけ。
+  // 「わからない」「今のまま安定」で同じ文を出すと日本語が壊れるので、黙る。
+  const directional = ['専門を深める', '教える・伝える側にまわる', '独立する', '職種を変える'];
+  if (directional.indexOf(A.future) >= 0) {
+    bits.push('3年後に「' + A.future + '」とお答えでした。そこへ向かうと、こうなります。');
+  }
   if (t.field && (A.fields || []).indexOf(t.field) < 0) {
     bits.push('いまの職場で' + t.field + 'を扱っていないなら、最初の一歩は認定ではなく職場に確認することです。');
   }
@@ -1114,6 +1123,11 @@ function matchBreakdown(t) {
   if (miss.length) {
     h += '<p class="whyhead"><strong>' + (hit.length ? '満たしていないもの' : 'この道が求めるもの') +
       '</strong></p><ul class="plain miss">' + miss.map(r => '<li>' + r.label + '</li>').join('') + '</ul>';
+  } else if (hit.length) {
+    // 全部 ✓ でもマッチ度が 100% にならないことがある（分母は別の道の満点のため）。
+    // 「何が欠けて引かれたのか」と読ませないよう、欠けが無いことを言葉で言い切る。
+    h += '<p class="whyhead"><strong>満たしていないもの：なし</strong></p>' +
+      '<ul class="plain miss"><li>この道があなたに求めるものは、答えていただいた範囲ですべてそろっています。</li></ul>';
   }
   return h + '</div>';
 }
@@ -1124,7 +1138,9 @@ function trackCard(t, idx) {
 
   // 閉じたままでも順位・マッチ度・転職が要るかどうかが読めるようにする。
   // タグを増やすと 390px で折り返すので、「条件が合う」は出さない（高いマッチ度が同じことを言う）。
-  const pctMatch = matchPct(t);
+  // 「すすめない」道にマッチ度を付けると「21% なのにすすめない」という並びノイズになる。
+  // 順位と並び（素点）はそのまま、% バッジだけ伏せてタグに語らせる。
+  const pctMatch = t.verdict === 'not-recommended' ? null : matchPct(t);
   const head = '<span class="rank">' + (idx + 1) + '</span>' +
     (pctMatch == null ? '' : '<span class="match">マッチ度 ' + pctMatch + '%</span>') +
     '<span class="tag">' + (t.group === 'clinical' ? '臨床のまま' : '外に出る') + '</span>' +

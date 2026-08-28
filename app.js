@@ -23,6 +23,11 @@ const REDRAW_ON = ['certs', 'taught', 'fields', 'priority'];
 
 const hasAnes = () => (A.certs || []).some(c => c.indexOf('麻酔') >= 0);
 
+// 結果を誰かに送るよう促すかどうか。
+// true にすると「まず、ひとつだけ」の最後に相談を促す一文が出る。
+// いまは false。送るかどうかで迷わせるくらいなら、こちらが受け取れなくていい（HK 2026-08-29）。
+const ASK_TO_SHARE = false;
+
 const STEPS = [
   {
     title: '今の働き方', note: '選択するだけです。30秒ほど。',
@@ -711,7 +716,8 @@ function result() {
       (a0.url ? '<a class="planlink" href="' + a0.url + '" target="_blank" rel="noopener">公式ページを開く</a>' : '') +
       '</li></ol>' +
       '<p style="margin:.6rem 0 0">全部やる必要はありません。今月はこれだけで前に進みます。</p>' +
-      '<span class="cap">迷ったら、この画面のスクリーンショットを送って相談してください。</span>'));
+      (ASK_TO_SHARE
+        ? '<span class="cap">迷ったら、この画面のスクリーンショットを送って相談してください。</span>' : '')));
   }
 
   const nav = document.createElement('div');

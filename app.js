@@ -537,6 +537,30 @@ function inventorySection() {
       '全体平均は ' + man(S.national.annualYen) + '。あなたの回答は「' + A.income + '」でした。</span>' +
       '<p class="src">' + S.curveCaveat + '<br>出典: ' + S.sourceName + ' / ' + S.source + '</p>'));
   }
+
+  // 働き方のレバー。employment と daysPerWeek をここで使う（この2問の唯一の使い所）。
+  // 道を変える前に、雇用形態だけで収入がどれだけ動くかを見せる。常勤の人には出さない。
+  if (A.employment === 'パート・非常勤' || A.employment === 'フリーランス' || A.employment === '離職中') {
+    const P = SUPPLY.workload.partTime, F = SUPPLY.workload.fullTime;
+    // 時給 × 月あたりの実労働時間 × 12 + 賞与。regions.js の年収換算と同じ流儀の概算
+    const partYen = Math.round(P.hourlyYen * P.monthlyHours * 12 + P.bonusThousandYen * 1000);
+    out.push(card('card flag',
+      '<span class="tag">働き方のレバー</span>' +
+      '<span class="tname">道を変える前に、動かせるものがひとつあります</span>' +
+      '<ul class="plain">' +
+      '<li>パートの全国平均：年収およそ <strong>' + man(partYen) + '</strong>' +
+        '（時給 ' + P.hourlyYen.toLocaleString() + ' 円 × 月 ' + P.monthlyHours +
+        ' 時間 × 12 + 賞与。当サイトの計算）</li>' +
+      '<li>常勤の全国平均：<strong>' + man(S.national.annualYen) + '</strong></li>' +
+      '</ul>' +
+      (A.daysPerWeek ? '<span class="cap">あなたの回答は週 ' + A.daysPerWeek +
+        ' 日。パートの全国平均は月 ' + P.daysPerMonth + ' 日です。</span>' : '') +
+      '<p style="margin:.6rem 0 0">同じ資格のまま、雇用形態だけでここまで幅があります。' +
+      'どの道を選ぶかとは別に、動かせるレバーです。</p>' +
+      '<span class="cap">どちらも全国平均で、あなたの時給・労働時間ではありません。' +
+      '常勤とパートは同じ調査の別集計のため、差額を正確に読むことはできません。</span>' +
+      '<p class="src">出典: ' + F.source + '<br>' + P.source + '</p>'));
+  }
   return out;
 }
 

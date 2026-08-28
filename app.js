@@ -473,8 +473,12 @@ function inventorySection() {
         ' 人に対して <strong>' + pct(c.holderRatio) + '</strong>。およそ ' +
         Math.round(1 / c.holderRatio).toLocaleString() + ' 人に 1 人です。</span>';
     } else {
-      html += '<span class="cap">実際に麻酔を任せる体制のある医院で働いていて、' +
-        'それを日常的に使っている。<strong>制度としてできることと、' +
+      // 「日常的に使っている」は certUse の回答がそう言っているときだけ書く。
+      // 回答に関係なく断定していた（2026-08-28 修正）
+      const uses = A.certUse === 'よく使う'
+        ? '実際に麻酔を任せる体制のある医院で働いていて、それを日常的に使っている。'
+        : A.certUse === 'たまに使う' ? '実務で使う場面がある。' : '';
+      html += '<span class="cap">' + uses + '<strong>制度としてできることと、' +
         '現場で任されることは別です。</strong></span>';
     }
     html += '<p class="src">出典: ' + c.source +
@@ -498,6 +502,14 @@ function inventorySection() {
     goBack.onclick = () => { cur = 1; render(); };
     unk.appendChild(goBack);
     out.push(unk);
+  }
+
+  // 「その他」で書いてもらった資格を捨てない。書いたものは画面に返す
+  if (A.certOther && A.certOther.trim()) {
+    out.push(card('card',
+      '<span class="tag">保有資格</span>' +
+      '<span class="cap">その他としてお書きいただいたもの</span>' +
+      '<p style="margin:.4rem 0 0"><strong>' + esc(A.certOther) + '</strong></p>'));
   }
 
   if ((A.certs || []).length) {

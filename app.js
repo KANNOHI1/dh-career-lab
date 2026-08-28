@@ -711,8 +711,10 @@ function result() {
       (a0.url ? '<a class="planlink" href="' + a0.url + '" target="_blank" rel="noopener">公式ページを開く</a>' : '') +
       '</li></ol>' +
       '<p style="margin:.6rem 0 0">全部やる必要はありません。今月はこれだけで前に進みます。</p>' +
-      '<span class="cap">迷ったら、この画面のスクリーンショットを送って相談してください。</span>'));
+      '<span class="cap">迷ったら、下の「回答を人に渡す」から相談したい相手に送れます。</span>'));
   }
+
+  w.appendChild(shareCard());
 
   const nav = document.createElement('div');
   nav.className = 'nav';
@@ -738,6 +740,101 @@ function result() {
   wipe.appendChild(btn);
   w.appendChild(wipe);
   return w;
+}
+
+// ---------- 回答を人に渡す ----------
+// 端末の外へ出すのは、本人がボタンを押したときだけ。
+// このサイトは送らない（fetch も XHR も使わない）。押した先の LINE 等へ本人の手で渡る。
+// 設問の文言は STEPS から引く。ここに書き写すと、設問を直したときに食い違う。
+function answerText() {
+  const lines = ['歯科衛生士キャリアラボの回答'];
+  STEPS.forEach(st => {
+    const rows = [];
+    st.qs.forEach(q => {
+      if (q.type === 'head') return;
+      if (q.showIf && !q.showIf()) return;
+      let v = A[q.id];
+      if (q.type === 'fieldYears') {
+        const fy = A.fieldYears || {};
+        const got = (A.fields || []).filter(f => fy[f] != null).map(f => f + ' ' + fy[f] + '年');
+        v = got.length ? got.join(' / ') : null;
+      } else if (Array.isArray(v)) {
+        v = v.length ? v.join('・') : null;
+      } else if (typeof v === 'number') {
+        v = v + (q.unit || '');
+      } else if (typeof v === 'string') {
+        v = v.trim() || null;
+      }
+      if (v == null || v === '') return;
+      rows.push('・' + q.t.replace(/[？?]$/, '') + '：' + v);
+    });
+    if (rows.length) lines.push('', '【' + st.title + '】', ...rows);
+  });
+
+  const top = ranked3Names();
+  if (top.length) lines.push('', '【出た選択肢（マッチ度の高い順・上位3つ）】', ...top);
+  return lines.join('\n');
+}
+
+// 結果の上位3つ。渡した相手が「何が出たか」まで分かるようにする
+function ranked3Names() {
+  if (!matchReady()) return [];
+  return rankedTracks().filter(t => t.verdict !== 'not-recommended').slice(0, 3)
+    .map((t, i) => (i + 1) + '. ' + t.name + '（マッチ度 ' + matchPct(t) + '%）');
+}
+
+function shareCard() {
+  const text = answerText();
+  const box = card('card flag',
+    '<span class="tag">回答を人に渡す</span>' +
+    '<span class="tname">相談したい相手に、この回答を送れます</span>' +
+    '<p style="margin:.4rem 0 0">下のボタンを押したときだけ、あなたの手で送られます。' +
+    '<strong>押さなければ何も出ていきません。</strong>' +
+    'このサイトがどこかへ送ることはありません。</p>');
+
+  // 何が渡るかを、渡す前に読めるようにする
+  const prev = document.createElement('details');
+  prev.className = 'card';
+  prev.style.margin = '.8rem 0 0';
+  prev.innerHTML = '<summary><span class="cap">送られる内容をぜんぶ見る</span></summary>' +
+    '<pre style="white-space:pre-wrap;word-break:break-word;font:inherit;font-size:.82rem;margin:.6rem 0 0">' +
+    esc(text) + '</pre>';
+  box.appendChild(prev);
+
+  const row = document.createElement('div');
+  row.className = 'nav';
+  row.style.margin = '1rem 0 0';
+
+  const msg = document.createElement('span');
+  msg.className = 'cap';
+
+  // 端末が共有シートを持っていればそれを使う（LINE がそのまま選べる）。
+  // 無ければクリップボードへ。どちらも失敗したら選択できる形で画面に出す。
+  const send = document.createElement('button');
+  send.type = 'button';
+  send.textContent = navigator.share ? '送る（LINE など）' : '回答をコピーする';
+  send.onclick = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ text: text });
+        msg.textContent = '送りました。';
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;    // 本人がやめた。何も言わない
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      msg.textContent = 'コピーしました。LINE に貼り付けて送ってください。';
+    } catch (e) {
+      prev.open = true;
+      msg.textContent = '上の「送られる内容」を長押しして選び、コピーしてください。';
+    }
+  };
+  row.appendChild(send);
+  box.appendChild(row);
+  box.appendChild(msg);
+  return box;
 }
 
 // ---------- 分野マップ ----------

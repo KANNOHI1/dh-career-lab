@@ -483,14 +483,21 @@ function inventorySection() {
   } else if (an) {
     const a = CERTIFICATIONS.find(x => x.id === 'anesthesia-jdsa');
     const b = CERTIFICATIONS.find(x => x.id === 'anesthesia-jda');
-    out.push(card('unknown',
+    const unk = card('unknown',
       '<strong>麻酔の認定は、どちらの制度か特定できませんでした。</strong><br>' +
       '同じ「認定麻酔衛生士」と呼ばれる資格が2つあり、保有者数が大きく違います。<br><br>' +
       '・' + a.issuer + '：<strong>' + a.holders + ' 名</strong>（' + pct(a.holderRatio) + '）<br>' +
       '・' + b.issuer + '：累計 ' + b.holders.toLocaleString() + ' 名（歯科医師を含む）<br><br>' +
       'お手元の認定証に書かれている発行元を見ると分かります。' +
       '前者は症例報告と口頭試問がある学会認定で、後者は1日の講習で取れる民間認定です。' +
-      '同じ名前でも中身が違います。'));
+      '同じ名前でも中身が違います。');
+    // 認定証を見に行った後、答え直しに戻る近道。該当の設問は STEP 2 にある
+    const goBack = document.createElement('button');
+    goBack.className = 'linkbtn'; goBack.type = 'button';
+    goBack.textContent = '発行元がわかったら、ここで選び直す';
+    goBack.onclick = () => { cur = 1; render(); };
+    unk.appendChild(goBack);
+    out.push(unk);
   }
 
   if ((A.certs || []).length) {

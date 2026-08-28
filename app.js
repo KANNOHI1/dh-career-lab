@@ -1223,7 +1223,9 @@ function trackCard(t, idx) {
       '<span class="cap">いずれも個別の求人に出ていた金額です。相場ではありません。' +
       '全国の平均は ' + man(SALARY.national.annualYen) + '。</span>';
   } else if (t.incomeNote) {
-    html += '<p style="margin:.9rem 0 0"><strong>収入</strong><br>' + t.incomeNote + '</p>';
+    // 「データがない」で終わらせない。比べる基準線だけは常に置く。
+    html += '<p style="margin:.9rem 0 0"><strong>収入</strong><br>' + t.incomeNote + '</p>' +
+      '<span class="cap">基準線は、常勤の全国平均 ' + man(SALARY.national.annualYen) + '。</span>';
   }
 
   // 実際に進んだ人の経歴

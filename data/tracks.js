@@ -202,7 +202,8 @@ const TRACKS = [
     blocker: null,
     income: null,
     incomeNote: '歯科衛生士がこの資格を取った後の年収データは見つかっていない。',
-    tradeoffs: ['歯科の手技からは離れる', '合格率は 25.6%（第28回・令和7年度）', '平成30年度に受験資格が厳格化され、受験者数が3分の1になった'],
+    // 合格率・受験者数の推移は reality が持つ。ここは「引き換えに失うもの・負うもの」だけ
+    tradeoffs: ['歯科の手技からは離れる'],
     fitFor: ['安定'],
     cautions: {},
     requiredCertificationIds: [],
@@ -332,7 +333,8 @@ const TRACKS = [
     blocker: null,
     income: null,
     incomeNote: '矯正の多くは自費のため、診療報酬の統計に出てきません。担当者の収入を示す公的データもありません。',
-    tradeoffs: ['認定は累計でも約140名と狭い門', '常勤3年以上の矯正臨床が要件', '職場が矯正をやっていないと経験が積めない'],
+    // 難易度・要件は entryRequirements と actions が持つ。ここは「引き換えに失うもの・負うもの」だけ
+    tradeoffs: ['職場が矯正をやっていないと経験が積めない'],
     fitFor: ['専門性'],
     cautions: {
       '転居できない': '矯正専門の医院が通える範囲にあるかどうかで決まります。',
@@ -366,7 +368,7 @@ const TRACKS = [
     blocker: null,
     income: null,
     incomeNote: '自費のため、市場規模も担当者の収入も公的統計に出てきません。',
-    tradeoffs: ['職場がインプラントをやっていないと要件を満たせない', '実施件数は1施設あたり月1.5件と多くない', '学会の会員歴が2年必要'],
+    tradeoffs: ['職場がインプラントをやっていないと要件を満たせない', '実施件数は1施設あたり月1.5件と多くない'],
     fitFor: ['専門性'],
     cautions: {},
     requiredCertificationIds: ['implant-jsoi'],
